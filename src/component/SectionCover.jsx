@@ -33,19 +33,32 @@ export const SectionCover = (prop) => {
             <p className="text-sm text-slate-400 mt-1">{subtitle}</p>
           )}
         </header>
-        <div className="flex items-center justify-between pr-6">
+        <div className=" flex items-center justify-between pr-6">
           <button
-            className="ml-4"
+            className="filter-icon ml-4 flex items-center gap-2"
             onClick={() => {
               settoggle(!toggle);
             }}
           >
-            filter
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            Filter
           </button>
           <input
             type="search"
             placeholder="Search Model"
-            className="border border-gray-900/50 px-4 py-1 w-80 rounded-3xl"
+            className="border border-gray-900/50 px-4 py-1 w-80 rounded-3xl placeholder:text-gray-600 placeholder:font-medium"
           />
         </div>
         {toggle && <FilterBar toggleHandle={settoggle} />}
