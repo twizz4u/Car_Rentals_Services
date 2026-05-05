@@ -50,9 +50,8 @@ export const BudgetFriendly = () => {
                 className="overflow-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               >
                 <div
-                  className={`mt-4 flex gap-5 pb-4 pt-2   ${
-                    isDragging ? "cursor-grabbing select-none" : "cursor-grab"
-                  }`}
+                  className={`mt-4 flex gap-5 pb-4 pt-2   ${isDragging ? "cursor-grabbing select-none" : "cursor-grab"
+                    }`}
                 >
                   {featuredCards.map((data, id) => (
                     <div

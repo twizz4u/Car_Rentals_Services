@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -7,7 +7,6 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { recentPayments } from "../assets/data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +28,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function PaymentsTable() {
+export default function PaymentsTable({ data = [], isLoading = false }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -50,10 +49,20 @@ export default function PaymentsTable() {
     return true;
   };
 
-  const columns = [
+  // The API now returns clean keys, so we pass data directly to useReactTable.
+
+  const columns = useMemo(() => [
     {
       header: "Transaction ID",
       accessorKey: "id",
+      cell: ({ getValue }) => {
+        const id = getValue();
+        return (
+          <span className="font-mono text-xs" title={id}>
+            {id.length > 12 ? `${id.slice(0, 12)}...` : id}
+          </span>
+        );
+      },
     },
     {
       header: ({ column }) => {
@@ -72,6 +81,10 @@ export default function PaymentsTable() {
     {
       header: "Amount",
       accessorKey: "amount",
+      cell: ({ getValue }) => {
+        const val = parseFloat(getValue() || 0);
+        return `₦${val.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      },
     },
     {
       header: "Date",
@@ -81,16 +94,25 @@ export default function PaymentsTable() {
     {
       header: "Method",
       accessorKey: "method",
+      cell: ({ getValue }) => {
+        const method = getValue();
+        return (
+          <span className="capitalize">{method}</span>
+        );
+      },
     },
     {
       header: "Status",
       accessorKey: "status",
       cell: ({ getValue }) => {
-        const status = getValue();
+        const rawStatus = getValue() || "";
+        const lower = rawStatus.toLowerCase();
+        const displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+
         const mapping =
-          status === "Success"
+          lower === "success" || lower === "completed"
             ? { bg: "bg-green-100", text: "text-green-800" }
-            : status === "Pending"
+            : lower === "pending"
               ? { bg: "bg-yellow-100", text: "text-yellow-800" }
               : { bg: "bg-red-100", text: "text-red-800" };
 
@@ -98,7 +120,7 @@ export default function PaymentsTable() {
           <span
             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${mapping.bg} ${mapping.text}`}
           >
-            {status}
+            {displayStatus}
           </span>
         );
       },
@@ -132,10 +154,10 @@ export default function PaymentsTable() {
         );
       },
     },
-  ];
+  ], []);
 
   const table = useReactTable({
-    data: recentPayments,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -249,7 +271,7 @@ export default function PaymentsTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full table-auto divide-y">
+        <table className="min-w-[1000px] w-full table-auto divide-y">
           <thead className="bg-slate-50">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -262,9 +284,9 @@ export default function PaymentsTable() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </th>
                   );
                 })}
@@ -272,13 +294,23 @@ export default function PaymentsTable() {
             ))}
           </thead>
           <tbody className="bg-white divide-y">
-            {table.getRowModel().rows.length > 0 ? (
+            {isLoading ? (
+              // Skeleton rows
+              Array.from({ length: 5 }).map((_, idx) => (
+                <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
+                  {columns.map((_, colIdx) => (
+                    <td key={colIdx} className="px-4 py-3">
+                      <div className="h-4 bg-slate-200 rounded-md animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row, idx) => (
                 <tr
                   key={row.id}
-                  className={`hover:bg-slate-50 ${
-                    idx % 2 === 0 ? "bg-white" : "bg-slate-50"
-                  }`}
+                  className={`hover:bg-slate-50 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50"
+                    }`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td

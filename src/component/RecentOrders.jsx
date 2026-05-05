@@ -1,24 +1,34 @@
 // ✅ CORRECT: useReactTable is the v8 export
-import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
-import { recentOrders } from "../assets/data";
+import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
 // import { motion } from "framer-motion";
 
-export default function RecentOrdersTable() {
+export default function RecentOrdersTable({ data = [] }) {
   const columns = [
     { header: "Order ID", accessorKey: "id" },
-    { header: "Customer", accessorKey: "customer" },
-    { header: "Car", accessorKey: "car" },
-    { header: "Date", accessorKey: "date" },
+    {
+      header: "Customer",
+      accessorKey: "customer_name",
+      cell: ({ getValue }) => getValue()?.split(" ")[0] || "",
+    },
+    { header: "Car", accessorKey: "car_name" },
+    { header: "Model", accessorKey: "car_model" },
+    { header: "Date", accessorKey: "start_date" },
+    {
+      header: "Amount",
+      accessorKey: "amount",
+      cell: ({ getValue }) => `₦${parseFloat(getValue()).toLocaleString()}`,
+    },
     {
       header: "Status",
       accessorKey: "status",
       cell: ({ getValue }) => {
         const status = getValue();
+        const lower = status?.toLowerCase();
         const mapping =
-          status === "Completed"
+          lower === "completed"
             ? { bg: "bg-green-100", text: "text-green-800" }
-            : status === "Pending"
+            : lower === "pending"
               ? { bg: "bg-yellow-100", text: "text-yellow-800" }
               : { bg: "bg-red-100", text: "text-red-800" };
 
@@ -31,19 +41,10 @@ export default function RecentOrdersTable() {
         );
       },
     },
-    {
-      header: "",
-      accessorKey: "actions",
-      cell: () => (
-        <button className="text-sm text-indigo-600 hover:underline">
-          View
-        </button>
-      ),
-    },
   ];
 
   const table = useReactTable({
-    data: recentOrders,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -72,13 +73,13 @@ export default function RecentOrdersTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full table-auto divide-y">
+        <table className="min-w-[800px] table-auto divide-y">
           <thead className="bg-slate-50">
             <tr>
               {table.getHeaderGroups()[0].headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
                 >
                   {header.column.columnDef.header}
                 </th>
@@ -89,18 +90,17 @@ export default function RecentOrdersTable() {
             {table.getRowModel().rows.map((row, idx) => (
               <tr
                 key={row.id}
-                className={`hover:bg-slate-50 ${
-                  idx % 2 === 0 ? "bg-white" : "bg-slate-50"
-                }`}
+                className={`hover:bg-slate-50 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50"
+                  }`}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
                     className="px-4 py-3 text-sm text-slate-700"
                   >
-                    {cell.column.id === "date"
+                    {cell.column.id === "start_date"
                       ? new Date(cell.getValue()).toLocaleDateString()
-                      : cell.renderValue()}
+                      : flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
               </tr>

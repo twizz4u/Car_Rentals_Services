@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import AdminLogin from "./pages/AdminLogin";
+import CustomerLogin from "./pages/CustomerReg";
 import { DashBoard } from "./pages/Dashboard";
 import { ManageCar } from "./pages/ManageCar";
 import { PaymentPage } from "./pages/Payment";
@@ -24,6 +25,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/register" element={<Register />} />
           <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/customer-login" element={<CustomerLogin />} />
           <Route
             path="/dashboard"
             element={

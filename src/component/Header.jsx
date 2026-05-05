@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 export const Header = () => {
@@ -81,6 +82,11 @@ export const Header = () => {
                   {totalItems}
                 </span>
               )}
+            </button>
+          </li>
+          <li>
+            <button className="px-4 py-2 text-slate-900 rounded-md text-sm font-medium shadow-sm hover:shadow-md transition-shadow">
+              <Link to="/customer-login">Sign in ?</Link>
             </button>
           </li>
         </ul>

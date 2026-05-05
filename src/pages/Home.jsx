@@ -17,11 +17,13 @@ import { Cart } from "../component/Cart";
 
 const pageStyle = {
   minHeight: "100vh",
+  backgroundColor: "#f1f5f9", // slate-100 base
   backgroundImage:
-    "radial-gradient(circle at 10% 10%, rgba(255,255,255,0.01), transparent 10%), linear-gradient(135deg, rgba(6,8,10,0.96) 0%, rgba(12,34,52,0.06) 50%, rgba(99,102,241,0.02) 100%)",
+    "radial-gradient(circle at 15% 50%, rgba(14, 165, 233, 0.04), transparent 40%), radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.03), transparent 40%), linear-gradient(180deg, rgba(248, 250, 252, 1) 0%, rgba(241, 245, 249, 1) 100%)",
   backgroundRepeat: "no-repeat",
   backgroundAttachment: "fixed",
   backgroundSize: "cover",
+  color: "#1e293b", // slate-800 text
 };
 
 const Home = () => {
@@ -39,7 +41,7 @@ const Home = () => {
           throw new Error("Failed to fetch from API");
         }
         const result = await response.json();
-        setCars(result.message);
+        setCars(result.data);
       } catch (error) {
         console.warn("API unreachable, falling back to local data:", error);
         setCars(data); // Fallback to local data

@@ -7,7 +7,6 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { allOrders } from "../assets/data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,15 +22,14 @@ import {
   ArrowUpDown,
   Search,
   Calendar,
-  Car,
-  User,
   Clock,
   CheckCircle,
   XCircle,
   PlayCircle,
+  Loader2,
 } from "lucide-react";
 
-export default function OrdersTable() {
+export default function OrdersTable({ orders = [], loading = false }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -45,52 +43,39 @@ export default function OrdersTable() {
       accessorKey: "id",
       header: "Order ID",
       cell: ({ getValue }) => (
-        <span className="font-mono text-xs text-slate-500">{getValue()}</span>
+        <span className="font-mono text-xs text-slate-500">#{getValue()}</span>
       ),
     },
     {
-      accessorKey: "car",
+      accessorKey: "car_name",
       header: "Car Details",
       cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-8 rounded-md bg-slate-100 overflow-hidden relative">
-            <img
-              src={row.original.car.image}
-              alt={row.original.car.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <p className="font-medium text-slate-900 text-sm">
-              {row.original.car.name}
-            </p>
-            <p className="text-[10px] text-slate-500">
-              {row.original.car.plate}
-            </p>
-          </div>
+        <div>
+          <p className="font-medium text-slate-900 text-sm">
+            {row.original.car_name}
+          </p>
+          <p className="text-[10px] text-slate-500">
+            {row.original.car_model}
+          </p>
         </div>
       ),
     },
     {
-      accessorKey: "customer",
+      accessorKey: "customer_name",
       header: "Customer",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-slate-200 overflow-hidden">
-            <img
-              src={row.original.customer.image}
-              alt="avatar"
-              className="w-full h-full object-cover"
-            />
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+            {row.original.customer_name?.charAt(0) || "?"}
           </div>
           <span className="text-sm text-slate-700">
-            {row.original.customer.name}
+            {row.original.customer_name}
           </span>
         </div>
       ),
     },
     {
-      accessorKey: "startDate",
+      accessorKey: "start_date",
       header: ({ column }) => {
         return (
           <Button
@@ -106,15 +91,30 @@ export default function OrdersTable() {
       cell: ({ getValue }) => (
         <div className="flex items-center gap-1.5 text-xs text-slate-600">
           <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          {getValue()}
+          {new Date(getValue()).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })}
         </div>
       ),
     },
     {
       accessorKey: "amount",
-      header: "Amount",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4 text-slate-500 hover:text-indigo-600"
+        >
+          Amount
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ getValue }) => (
-        <span className="font-bold text-slate-800 text-sm">{getValue()}</span>
+        <span className="font-bold text-slate-800 text-sm">
+          ₦{Number(getValue()).toLocaleString()}
+        </span>
       ),
     },
     {
@@ -122,23 +122,26 @@ export default function OrdersTable() {
       header: "Status",
       cell: ({ getValue }) => {
         const status = getValue();
+        const normalized = status?.toLowerCase();
         let colorClass = "";
         let Icon = Clock;
 
-        switch (status) {
-          case "Completed":
+        switch (normalized) {
+          case "completed":
+          case "approved":
             colorClass = "bg-green-50 text-green-700 border-green-200";
             Icon = CheckCircle;
             break;
-          case "Ongoing":
+          case "ongoing":
             colorClass = "bg-blue-50 text-blue-700 border-blue-200";
             Icon = PlayCircle;
             break;
-          case "Cancelled":
+          case "cancelled":
+          case "rejected":
             colorClass = "bg-red-50 text-red-700 border-red-200";
             Icon = XCircle;
             break;
-          case "Pending":
+          case "pending":
             colorClass = "bg-amber-50 text-amber-700 border-amber-200";
             Icon = Clock;
             break;
@@ -151,7 +154,7 @@ export default function OrdersTable() {
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${colorClass}`}
           >
             <Icon className="w-3 h-3 mr-1.5" />
-            {status}
+            {status?.charAt(0).toUpperCase() + status?.slice(1)}
           </span>
         );
       },
@@ -186,7 +189,7 @@ export default function OrdersTable() {
   ];
 
   const table = useReactTable({
-    data: allOrders,
+    data: orders,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -220,104 +223,106 @@ export default function OrdersTable() {
           <Button variant="outline" size="sm" className="hidden md:flex">
             Filter
           </Button>
-          <Button
-            size="sm"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 shadow-lg"
-          >
-            + Create Order
-          </Button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-100 overflow-hidden">
-        <table className="min-w-full table-auto divide-y divide-slate-100">
-          <thead className="bg-slate-50/50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <th
-                      key={header.id}
-                      className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        </div>
+      ) : (
+        <>
+          <div className="rounded-xl border border-slate-100 overflow-x-auto">
+            <table className="min-w-[900px] w-full table-auto divide-y divide-slate-100">
+              <thead className="bg-slate-50/50">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <th
+                          key={header.id}
+                          className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className="hover:bg-slate-50/60 transition-colors"
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
+                      {row.getVisibleCells().map((cell) => (
+                        <td
+                          key={cell.id}
+                          className="px-6 py-4 text-sm text-slate-700"
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
                           )}
-                    </th>
-                  );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
-            {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="hover:bg-slate-50/60 transition-colors"
-                >
-                  {row.getVisibleCells().map((cell) => (
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
                     <td
-                      key={cell.id}
-                      className="px-6 py-4 text-sm text-slate-700"
+                      colSpan={columns.length}
+                      className="h-24 text-center text-slate-500"
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      No orders found.
                     </td>
-                  ))}
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="h-24 text-center text-slate-500"
-                >
-                  No orders found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-      <div className="flex items-center justify-between pt-2">
-        <div className="text-sm text-slate-500">
-          Page{" "}
-          <span className="font-semibold text-slate-900">
-            {table.getState().pagination.pageIndex + 1}
-          </span>{" "}
-          of{" "}
-          <span className="font-semibold text-slate-900">
-            {table.getPageCount()}
-          </span>
-        </div>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="hover:bg-indigo-50 hover:text-indigo-600"
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="hover:bg-indigo-50 hover:text-indigo-600"
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+          <div className="flex items-center justify-between pt-2">
+            <div className="text-sm text-slate-500">
+              Page{" "}
+              <span className="font-semibold text-slate-900">
+                {table.getState().pagination.pageIndex + 1}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-slate-900">
+                {table.getPageCount()}
+              </span>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className="hover:bg-indigo-50 hover:text-indigo-600"
+              >
+                Previous
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className="hover:bg-indigo-50 hover:text-indigo-600"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

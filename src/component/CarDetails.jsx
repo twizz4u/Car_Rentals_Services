@@ -47,11 +47,10 @@ export const CarDetail = ({ cardata = {}, changeui }) => {
           {/* Image Section */}
           <div className="relative h-24 md:h-40 shrink-0 overflow-hidden rounded-t-2xl md:rounded-t-[30px] border-b border-slate-100 bg-slate-50">
             <div
-              className={`${
-                imageLoaded
-                  ? "hidden"
-                  : "absolute inset-0 animate-pulse bg-slate-200"
-              }`}
+              className={`${imageLoaded
+                ? "hidden"
+                : "absolute inset-0 animate-pulse bg-slate-200"
+                }`}
             ></div>
             <img
               src={image}
@@ -66,9 +65,8 @@ export const CarDetail = ({ cardata = {}, changeui }) => {
             </span>
             <button
               onClick={() => setLiked((s) => !s)}
-              className={`absolute right-1 top-1 md:right-3 md:top-3 rounded-full bg-white/90 p-0.5 md:p-2 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-red-500 active:scale-90 text-xs md:text-base ${
-                liked ? "text-red-500" : "text-slate-400"
-              }`}
+              className={`absolute right-1 top-1 md:right-3 md:top-3 rounded-full bg-white/90 p-0.5 md:p-2 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-red-500 active:scale-90 text-xs md:text-base ${liked ? "text-red-500" : "text-slate-400"
+                }`}
             >
               {liked ? "♥" : "♡"}
             </button>
@@ -76,9 +74,6 @@ export const CarDetail = ({ cardata = {}, changeui }) => {
 
           <div className="flex flex-1 flex-col justify-between px-1.5 py-2 md:p-4">
             <div>
-              <p className="text-[9px] md:text-xs uppercase tracking-[0.3em] md:tracking-[0.5em] text-indigo-500">
-                {driveSpec}
-              </p>
               <h4
                 className="mt-0.5 md:mt-1 text-sm md:text-xl font-bold text-slate-900 line-clamp-1"
                 title={name}
@@ -105,11 +100,10 @@ export const CarDetail = ({ cardata = {}, changeui }) => {
             <div className="flex gap-1 md:flex-col md:space-y-2">
               <button
                 onClick={handleAddToCart}
-                className={`flex-1 md:flex-none md:w-full h-5 md:h-auto rounded-sm md:rounded-xl py-0 md:py-2.5 text-[10px] md:text-sm font-bold uppercase tracking-wide transition-all duration-300 flex items-center justify-center ${
-                  addedToCart
-                    ? "bg-emerald-500 text-white"
-                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200"
-                }`}
+                className={`flex-1 md:flex-none md:w-full h-5 md:h-auto rounded-sm md:rounded-xl py-0 md:py-2.5 text-[10px] md:text-sm font-bold uppercase tracking-wide transition-all duration-300 flex items-center justify-center ${addedToCart
+                  ? "bg-emerald-500 text-white"
+                  : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200"
+                  }`}
               >
                 {addedToCart ? "✓" : "Cart"}
               </button>

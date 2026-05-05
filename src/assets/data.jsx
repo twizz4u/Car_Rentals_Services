@@ -297,7 +297,7 @@ export const carsDashData = [
   {
     id: 1,
     name: "Toyota Corolla",
-    plate: "LAG-234-AA",
+    model: "LAG-234-AA",
     pricePerDay: 15000,
     status: "available", // available | rented | maintenance
     published: true,
@@ -306,7 +306,7 @@ export const carsDashData = [
   {
     id: 2,
     name: "Honda Civic",
-    plate: "ABJ-983-KD",
+    model: "ABJ-983-KD",
     pricePerDay: 18000,
     status: "rented",
     published: false,
@@ -315,7 +315,7 @@ export const carsDashData = [
   {
     id: 3,
     name: "Suzuki Swift",
-    plate: "LAG-201-AB",
+    model: "LAG-201-AB",
     pricePerDay: 12000,
     status: "available",
     published: true,
@@ -324,7 +324,7 @@ export const carsDashData = [
   {
     id: 4,
     name: "Toyota Yaris",
-    plate: "LAG-202-BC",
+    model: "LAG-202-BC",
     pricePerDay: 13000,
     status: "rented",
     published: false,
@@ -333,7 +333,7 @@ export const carsDashData = [
   {
     id: 5,
     name: "Ford Escape",
-    plate: "LAG-203-CD",
+    model: "LAG-203-CD",
     pricePerDay: 21000,
     status: "maintenance",
     published: false,
@@ -342,7 +342,7 @@ export const carsDashData = [
   {
     id: 6,
     name: "Nissan Altima",
-    plate: "LAG-601-XY",
+    model: "LAG-601-XY",
     pricePerDay: 17000,
     status: "available",
     published: true,
@@ -351,7 +351,7 @@ export const carsDashData = [
   {
     id: 7,
     name: "Ford Focus",
-    plate: "LAG-602-ZA",
+    model: "LAG-602-ZA",
     pricePerDay: 14000,
     status: "rented",
     published: false,
@@ -360,7 +360,7 @@ export const carsDashData = [
   {
     id: 8,
     name: "BMW 3 Series",
-    plate: "LAG-603-BB",
+    model: "LAG-603-BB",
     pricePerDay: 45000,
     status: "available",
     published: true,
@@ -369,7 +369,7 @@ export const carsDashData = [
   {
     id: 9,
     name: "Mercedes C-Class",
-    plate: "LAG-604-CC",
+    model: "LAG-604-CC",
     pricePerDay: 52000,
     status: "maintenance",
     published: false,
@@ -378,7 +378,7 @@ export const carsDashData = [
   {
     id: 10,
     name: "Audi A4",
-    plate: "LAG-605-DD",
+    model: "LAG-605-DD",
     pricePerDay: 48000,
     status: "available",
     published: true,
@@ -387,7 +387,7 @@ export const carsDashData = [
   {
     id: 11,
     name: "Subaru Outback",
-    plate: "LAG-606-EE",
+    model: "LAG-606-EE",
     pricePerDay: 22000,
     status: "available",
     published: true,
@@ -396,7 +396,7 @@ export const carsDashData = [
   {
     id: 12,
     name: "Kia Sportage",
-    plate: "LAG-607-FF",
+    model: "LAG-607-FF",
     pricePerDay: 20000,
     status: "rented",
     published: false,
@@ -405,7 +405,7 @@ export const carsDashData = [
   {
     id: 13,
     name: "Hyundai Santa Fe",
-    plate: "LAG-608-GG",
+    model: "LAG-608-GG",
     pricePerDay: 24000,
     status: "available",
     published: true,
@@ -414,7 +414,7 @@ export const carsDashData = [
   {
     id: 14,
     name: "Volkswagen Passat",
-    plate: "LAG-609-HH",
+    model: "LAG-609-HH",
     pricePerDay: 21000,
     status: "maintenance",
     published: false,
@@ -423,7 +423,7 @@ export const carsDashData = [
   {
     id: 15,
     name: "Chevrolet Malibu",
-    plate: "LAG-610-II",
+    model: "LAG-610-II",
     pricePerDay: 19000,
     status: "rented",
     published: true,
@@ -432,7 +432,7 @@ export const carsDashData = [
   {
     id: 16,
     name: "Mazda 6",
-    plate: "LAG-611-JJ",
+    model: "LAG-611-JJ",
     pricePerDay: 19500,
     status: "available",
     published: false,
@@ -441,7 +441,7 @@ export const carsDashData = [
   {
     id: 17,
     name: "Lexus ES",
-    plate: "LAG-612-KK",
+    model: "LAG-612-KK",
     pricePerDay: 55000,
     status: "available",
     published: true,
@@ -450,7 +450,7 @@ export const carsDashData = [
   {
     id: 18,
     name: "GMC Yukon",
-    plate: "LAG-613-LL",
+    model: "LAG-613-LL",
     pricePerDay: 60000,
     status: "rented",
     published: false,
@@ -459,7 +459,7 @@ export const carsDashData = [
   {
     id: 19,
     name: "Infiniti Q50",
-    plate: "LAG-614-MM",
+    model: "LAG-614-MM",
     pricePerDay: 47000,
     status: "available",
     published: true,
@@ -468,7 +468,7 @@ export const carsDashData = [
   {
     id: 20,
     name: "Mitsubishi Outlander",
-    plate: "LAG-615-NN",
+    model: "LAG-615-NN",
     pricePerDay: 23000,
     status: "maintenance",
     published: false,
@@ -477,7 +477,7 @@ export const carsDashData = [
   {
     id: 21,
     name: "Peugeot 3008",
-    plate: "LAG-616-OO",
+    model: "LAG-616-OO",
     pricePerDay: 18000,
     status: "available",
     published: true,
@@ -486,7 +486,7 @@ export const carsDashData = [
   {
     id: 22,
     name: "Renault Koleos",
-    plate: "LAG-617-PP",
+    model: "LAG-617-PP",
     pricePerDay: 17500,
     status: "available",
     published: false,
@@ -495,7 +495,7 @@ export const carsDashData = [
   {
     id: 23,
     name: "Skoda Octavia",
-    plate: "LAG-618-QQ",
+    model: "LAG-618-QQ",
     pricePerDay: 16000,
     status: "rented",
     published: true,
@@ -504,7 +504,7 @@ export const carsDashData = [
   {
     id: 24,
     name: "Mini Cooper",
-    plate: "LAG-619-RR",
+    model: "LAG-619-RR",
     pricePerDay: 25000,
     status: "available",
     published: true,
@@ -513,7 +513,7 @@ export const carsDashData = [
   {
     id: 25,
     name: "Toyota Camry",
-    plate: "LAG-620-SS",
+    model: "LAG-620-SS",
     pricePerDay: 26000,
     status: "available",
     published: true,

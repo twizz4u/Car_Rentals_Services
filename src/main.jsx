@@ -7,9 +7,9 @@ import App from "./App.jsx";
 console.log(createRoot);
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // <StrictMode>
     <HashRouter>
       <App />
     </HashRouter>
-  </StrictMode>,
+  // </StrictMode>,
 );

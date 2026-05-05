@@ -7,7 +7,6 @@ import {
   getFilteredRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { customersList } from "../assets/data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +26,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-export default function CustomersTable() {
+export default function CustomersTable({ data = [], isLoading = false }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -36,19 +35,9 @@ export default function CustomersTable() {
     pageSize: 5,
   });
 
-  // Parse currency string to number
-  const parseAmount = (amountStr) => {
-    if (!amountStr) return 0;
-    return parseInt(amountStr.replace(/[^0-9]/g, ""));
-  };
-
-  const maxSpent = Math.max(
-    ...customersList.map((c) => parseAmount(c.totalSpent)),
-  );
-
   const columns = [
     {
-      accessorKey: "name",
+      accessorKey: "customer_name",
       header: ({ column }) => {
         return (
           <Button
@@ -70,20 +59,20 @@ export default function CustomersTable() {
           "from-emerald-500 to-teal-500 shadow-emerald-200",
           "from-orange-500 to-amber-500 shadow-orange-200",
         ];
-        const colorClass = colors[row.original.name.length % colors.length];
+        const name = row.original.customer_name || "Unknown";
+        const colorClass = colors[name.length % colors.length];
 
         return (
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-md`}
             >
-              {row.original.name.charAt(0)}
+              {name.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col">
               <span className="font-semibold text-slate-900">
-                {row.original.name}
+                {name}
               </span>
-              <span className="text-xs text-slate-500">{row.original.id}</span>
             </div>
           </div>
         );
@@ -106,7 +95,7 @@ export default function CustomersTable() {
       ),
     },
     {
-      accessorKey: "totalSpent",
+      accessorKey: "total_spent",
       header: ({ column }) => {
         return (
           <Button
@@ -123,14 +112,19 @@ export default function CustomersTable() {
         return (
           <div className="space-y-2 w-[140px]">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-800">{getValue()}</span>
+              <span className="font-bold text-slate-800">
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }).format(getValue() || 0)}
+              </span>
             </div>
           </div>
         );
       },
     },
     {
-      accessorKey: "rentalsCount",
+      accessorKey: "rentals_count",
       header: "Rentals",
       cell: ({ getValue }) => (
         <div className="flex items-center gap-2 font-medium text-slate-700 bg-indigo-50 px-2.5 py-1 rounded-md w-fit border border-indigo-100">
@@ -138,35 +132,6 @@ export default function CustomersTable() {
           {getValue()}
         </div>
       ),
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ getValue }) => {
-        const status = getValue();
-        const styles =
-          status === "Active"
-            ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-            : status === "Inactive"
-              ? "bg-slate-100 text-slate-600 border-slate-200"
-              : "bg-blue-100 text-blue-700 border-blue-200";
-
-        const dotColor =
-          status === "Active"
-            ? "bg-emerald-500"
-            : status === "Inactive"
-              ? "bg-slate-400"
-              : "bg-blue-500";
-
-        return (
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${dotColor}`} />
-            {status}
-          </span>
-        );
-      },
     },
     {
       id: "actions",
@@ -202,7 +167,7 @@ export default function CustomersTable() {
   ];
 
   const table = useReactTable({
-    data: customersList,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -236,8 +201,8 @@ export default function CustomersTable() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-100 overflow-hidden">
-        <table className="min-w-full table-auto divide-y divide-slate-100">
+      <div className="rounded-xl border border-slate-100 overflow-x-auto">
+        <table className="min-w-[900px] w-full table-auto divide-y divide-slate-100">
           <thead className="bg-slate-50/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
@@ -250,9 +215,9 @@ export default function CustomersTable() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </th>
                   );
                 })}

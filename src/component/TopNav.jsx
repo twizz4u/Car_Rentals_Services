@@ -1,12 +1,30 @@
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 export default function TopNav({
   title = "Dashboard",
   subtitle = "Overview of activity and analytics",
+  onMenuClick,
 }) {
   return (
-    <nav className="dashboard-Top-Nav w-full bg-white shadow-sm rounded-lg p-4 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-4">
-        <h2 className="font-bold text-2xl text-slate-800">{title}</h2>
-        <div className="hidden sm:block text-sm text-slate-500">{subtitle}</div>
+    <nav className="dashboard-Top-Nav w-full bg-white shadow-sm rounded-lg p-2 md:p-4 flex items-center justify-between gap-3 md:gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onMenuClick}
+        >
+          <Menu className="w-6 h-6" />
+        </Button>
+        <div className="flex flex-col md:flex-row md:items-baseline md:gap-4">
+          <h2 className="font-bold text-lg md:text-2xl text-slate-800 truncate max-w-[120px] md:max-w-none">
+            {title}
+          </h2>
+          <div className="hidden lg:block text-sm text-slate-500 whitespace-nowrap">
+            {subtitle}
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 max-w-lg">

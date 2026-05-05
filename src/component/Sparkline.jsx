@@ -10,6 +10,7 @@ export default function Sparkline({ data, color }) {
           stroke={color}
           strokeWidth={2}
           dot={false}
+          isAnimationActive={false}
         />
       </LineChart>
     </ResponsiveContainer>
