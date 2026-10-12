@@ -7,7 +7,7 @@ import { Car, Menu, X } from "lucide-react";
 export const Header = () => {
   const [open, setOpen] = useState(false);
   const { totalItems, toggleCart } = useCart();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-black/95 text-[#e4e4e7] backdrop-blur-sm font-['Plus_Jakarta_Sans',sans-serif]">
@@ -82,15 +82,12 @@ export const Header = () => {
           {/* User Authentication or Driver Portal */}
           {user ? (
             <div className="hidden sm:flex items-center gap-3 pl-2">
-              <span className="text-sm font-mono text-slate-300 truncate max-w-[130px]">
-                {user.name || user.email?.split("@")[0]}
-              </span>
-              <button
-                onClick={logout}
-                className="text-xs font-mono uppercase text-rose-400 hover:text-rose-300 transition-colors"
+              <Link
+                to="/account"
+                className="text-xs font-mono uppercase text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
               >
-                Sign Out
-              </button>
+                Driver Portal
+              </Link>
             </div>
           ) : (
             <Link

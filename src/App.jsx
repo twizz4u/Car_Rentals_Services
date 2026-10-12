@@ -11,6 +11,7 @@ import { PaymentDetails } from "./pages/PaymentDetails";
 import { Customers } from "./pages/Customers";
 import { Orders } from "./pages/Orders";
 import { Register } from "./pages/Register";
+import { CustomerProfile } from "./pages/CustomerProfile";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -77,6 +78,14 @@ function App() {
           />
           <Route path="/checkout" element={<PaymentPage />} />
           <Route path="/car-details" element={<CarDetailsPage />} />
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute redirectTo="/customer-login">
+                <CustomerProfile />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </CartProvider>
     </AuthProvider>

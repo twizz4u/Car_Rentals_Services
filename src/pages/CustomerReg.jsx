@@ -45,7 +45,7 @@ export const CustomerReg = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const redirectTarget = location.state?.from?.pathname || "/dashboard";
+  const redirectTarget = location.state?.from?.pathname || "/account";
 
   // Password strength calculation
   const getPasswordStrength = (pwd) => {
@@ -146,7 +146,9 @@ export const CustomerReg = () => {
     setFormError("");
 
     if (!regFullName.trim()) {
-      setFormError("Please provide your full legal name as it appears on your license.");
+      setFormError(
+        "Please provide your full legal name as it appears on your license.",
+      );
       return;
     }
     if (!regEmail.trim()) {
@@ -169,23 +171,27 @@ export const CustomerReg = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/customer/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/customer/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            name: regFullName.trim(),
+            email: regEmail.trim(),
+            password: regPassword,
+          }),
         },
-        body: JSON.stringify({
-          name: regFullName.trim(),
-          email: regEmail.trim(),
-          password: regPassword,
-        }),
-      });
+      );
 
       const result = await response.json();
 
       if (response.ok && (result.status === "success" || result.token)) {
-        const token = result.token || result.data?.token || `tasin_${Date.now()}`;
+        const token =
+          result.token || result.data?.token || `tasin_${Date.now()}`;
         login(token, {
           email: regEmail,
           name: regFullName,
@@ -218,7 +224,6 @@ export const CustomerReg = () => {
   return (
     <div className="min-h-screen bg-[#090b10] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] selection:bg-amber-400/30 selection:text-amber-200">
       <div className="min-h-screen grid lg:grid-cols-12 relative overflow-hidden">
-        
         {/* LEFT STAGE: Cinematic Editorial Canvas (7 cols on large screens) */}
         <section className="relative lg:col-span-7 xl:col-span-7 hidden lg:flex flex-col justify-between p-10 xl:p-14 overflow-hidden border-r border-white/[0.06]">
           {/* Background Photography with Bespoke Grading */}
@@ -272,9 +277,9 @@ export const CustomerReg = () => {
             </h1>
 
             <p className="mt-5 text-sm xl:text-base text-slate-300/90 leading-relaxed font-light">
-              Skip traditional counter queues. Choose from an inspected garage of
-              executive sedans, grand SUVs, and performance vehicles with direct keyless
-              bay access and curbside drop-off.
+              Skip traditional counter queues. Choose from an inspected garage
+              of executive sedans, grand SUVs, and performance vehicles with
+              direct keyless bay access and curbside drop-off.
             </p>
 
             {/* Editorial Feature Specs */}
@@ -283,7 +288,9 @@ export const CustomerReg = () => {
                 <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
                   01. HANDOVER
                 </p>
-                <p className="text-xs text-slate-300 font-medium mt-1">Instant Bay Pickup</p>
+                <p className="text-xs text-slate-300 font-medium mt-1">
+                  Instant Bay Pickup
+                </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Walk straight to your reserved vehicle.
                 </p>
@@ -292,7 +299,9 @@ export const CustomerReg = () => {
                 <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
                   02. PROTECTION
                 </p>
-                <p className="text-xs text-slate-300 font-medium mt-1">Full Collision Tier</p>
+                <p className="text-xs text-slate-300 font-medium mt-1">
+                  Full Collision Tier
+                </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Zero deductible deposit options.
                 </p>
@@ -301,7 +310,9 @@ export const CustomerReg = () => {
                 <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
                   03. FLEXIBILITY
                 </p>
-                <p className="text-xs text-slate-300 font-medium mt-1">Free Adjustments</p>
+                <p className="text-xs text-slate-300 font-medium mt-1">
+                  Free Adjustments
+                </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Reschedule up to 24h prior.
                 </p>
@@ -330,7 +341,6 @@ export const CustomerReg = () => {
 
         {/* RIGHT STAGE: The Driver Atelier Console (5 cols) */}
         <section className="lg:col-span-5 xl:col-span-5 flex flex-col justify-between bg-[#0b0e14] relative z-10 min-h-screen">
-          
           {/* Subtle Ambient Glow at Top Edge */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/[0.04] rounded-full blur-[100px] pointer-events-none" />
 
@@ -375,7 +385,6 @@ export const CustomerReg = () => {
 
           {/* Main Form Body */}
           <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-8 max-w-md w-full mx-auto">
-            
             {/* Mode Selector Tabs (Editorial style) */}
             <div className="flex border-b border-white/[0.08] mb-8">
               <button
@@ -412,7 +421,9 @@ export const CustomerReg = () => {
             {/* Headline and Context */}
             <div className="mb-6">
               <h2 className="font-['Syne',sans-serif] text-2xl font-bold text-white tracking-tight">
-                {isLogin ? "Access your reservation" : "Register driver credentials"}
+                {isLogin
+                  ? "Access your reservation"
+                  : "Register driver credentials"}
               </h2>
               <p className="mt-1 text-xs text-slate-400 leading-relaxed font-light">
                 {isLogin
@@ -465,7 +476,9 @@ export const CustomerReg = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        toast.info("Please contact customer concierge to reset your security credentials.")
+                        toast.info(
+                          "Please contact customer concierge to reset your security credentials.",
+                        )
                       }
                       className="text-[11px] text-slate-400 hover:text-amber-400 transition-colors"
                     >
@@ -487,7 +500,9 @@ export const CustomerReg = () => {
                       type="button"
                       onClick={() => setShowLoginPassword(!showLoginPassword)}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
-                      aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                      aria-label={
+                        showLoginPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showLoginPassword ? (
                         <EyeOff className="w-4 h-4" />
@@ -636,30 +651,42 @@ export const CustomerReg = () => {
                 {/* Password strength */}
                 {regPassword && (
                   <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-400">
-                    <span className="text-[10px] text-slate-400">Strength:</span>
+                    <span className="text-[10px] text-slate-400">
+                      Strength:
+                    </span>
                     <div className="flex-1 flex gap-1 h-1 bg-slate-800 rounded-full overflow-hidden">
                       <div
                         className={`h-full flex-1 rounded-full ${
-                          strength.score >= 1 ? "bg-amber-400" : "bg-transparent"
+                          strength.score >= 1
+                            ? "bg-amber-400"
+                            : "bg-transparent"
                         }`}
                       />
                       <div
                         className={`h-full flex-1 rounded-full ${
-                          strength.score >= 2 ? "bg-amber-400" : "bg-transparent"
+                          strength.score >= 2
+                            ? "bg-amber-400"
+                            : "bg-transparent"
                         }`}
                       />
                       <div
                         className={`h-full flex-1 rounded-full ${
-                          strength.score >= 3 ? "bg-emerald-400" : "bg-transparent"
+                          strength.score >= 3
+                            ? "bg-emerald-400"
+                            : "bg-transparent"
                         }`}
                       />
                       <div
                         className={`h-full flex-1 rounded-full ${
-                          strength.score >= 4 ? "bg-emerald-500" : "bg-transparent"
+                          strength.score >= 4
+                            ? "bg-emerald-500"
+                            : "bg-transparent"
                         }`}
                       />
                     </div>
-                    <span className="text-[10px] text-slate-400">{strength.label}</span>
+                    <span className="text-[10px] text-slate-400">
+                      {strength.label}
+                    </span>
                   </div>
                 )}
 
@@ -672,8 +699,8 @@ export const CustomerReg = () => {
                     className="mt-0.5 w-3.5 h-3.5 rounded bg-black/50 border-slate-700 text-amber-500 focus:ring-amber-400/30 shrink-0"
                   />
                   <span>
-                    I confirm I hold an active driver's license (minimum age 21) and
-                    accept rental dispatch terms.
+                    I confirm I hold an active driver's license (minimum age 21)
+                    and accept rental dispatch terms.
                   </span>
                 </label>
 
@@ -715,17 +742,22 @@ export const CustomerReg = () => {
           <footer className="px-6 sm:px-10 py-4 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
             <span>© {new Date().getFullYear()} Tasin Mobility Fleet</span>
             <div className="flex items-center gap-3">
-              <Link to="/admin-login" className="hover:text-amber-400 transition-colors">
+              <Link
+                to="/admin-login"
+                className="hover:text-amber-400 transition-colors"
+              >
                 Staff Dispatch
               </Link>
               <span>•</span>
-              <a href="tel:+2348008274666" className="hover:text-amber-400 transition-colors">
+              <a
+                href="tel:+2348008274666"
+                className="hover:text-amber-400 transition-colors"
+              >
                 Support
               </a>
             </div>
           </footer>
         </section>
-
       </div>
     </div>
   );
