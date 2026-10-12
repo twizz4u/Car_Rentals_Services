@@ -290,7 +290,7 @@ export const CarDetail = ({ cardata = {} }) => {
             <button
               type="button"
               onClick={handleViewDetails}
-              className="whitespace-nowrap text-xs font-medium text-slate-400 transition-colors hover:text-white cursor-pointer"
+              className="hidden sm:inline whitespace-nowrap text-xs font-medium text-slate-400 transition-colors hover:text-white cursor-pointer"
             >
               View details
             </button>
