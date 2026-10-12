@@ -119,6 +119,12 @@ export const CarDetailsPage = () => {
     );
   }, [location.state]);
 
+  // Start at the top on every arrival. This route reuses the same component
+  // across navigations, so the scroll position is not reset on its own.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [location.key]);
+
   // Everything below is read from the vehicle record — nothing is invented.
   const identity = useMemo(() => resolveIdentity(car), [car]);
   const vehicleName = identity.manufacturer || "Executive Vehicle";
@@ -753,7 +759,7 @@ export const CarDetailsPage = () => {
                     key={`${item.name}-${item.model}-${index}`}
                     delay={60 * index}
                   >
-                    <CarDetail cardata={item} />
+                    <CarDetail cardata={item} hideDetailsLink />
                   </Reveal>
                 ))}
               </div>

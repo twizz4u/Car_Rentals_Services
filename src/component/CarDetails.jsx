@@ -159,7 +159,7 @@ export const formatVehicleTitle = (name = "", model = "") => {
   return `${cleanName} ${cleanModel}`;
 };
 
-export const CarDetail = ({ cardata = {} }) => {
+export const CarDetail = ({ cardata = {}, hideDetailsLink = false }) => {
   const { name = "Executive Vehicle", model = "S 580" } = cardata;
 
   const { addToCart } = useCart();
@@ -287,13 +287,15 @@ export const CarDetail = ({ cardata = {} }) => {
           </span>
 
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={handleViewDetails}
-              className="hidden sm:inline whitespace-nowrap text-xs font-medium text-slate-400 transition-colors hover:text-white cursor-pointer"
-            >
-              View details
-            </button>
+            {hideDetailsLink ? null : (
+              <button
+                type="button"
+                onClick={handleViewDetails}
+                className="hidden sm:inline whitespace-nowrap text-xs font-medium text-slate-400 transition-colors hover:text-white cursor-pointer"
+              >
+                View details
+              </button>
+            )}
             <button
               type="button"
               onClick={handleRentNow}
