@@ -1,71 +1,77 @@
 import { useInView } from "../hooks/useInView";
+import { Check } from "lucide-react";
 
-const highlights = [
-  "Premium sedans, SUVs, and EVs across 28 cities",
-  "Concierge delivery in under 45 minutes",
-  "Flexible loan terms with transparent pricing",
-  "24/7 mechanic and roadside support",
+export const highlights = [
+  "Premium sedans, SUVs, and EVs across Lagos & Abuja",
+  "Concierge airport delivery directly to terminal",
+  "Transparent reservation rates with zero surprise fees",
+  "24/7 dedicated support & rapid vehicle dispatch",
 ];
 
-const randomImage =
-  "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1200&q=80";
+const brandImage = "/cars/hero_mercedes_s580.jpg";
 
 export const About = () => {
   const [ref, isInView] = useInView({ threshold: 0.15 });
 
   return (
-    <section ref={ref} className="mt-20 px-6" aria-labelledby="about-heading">
-      <div className="mx-auto max-w-6xl rounded-[32px] border border-slate-100 bg-white shadow-[0_25px_65px_rgba(15,23,42,0.08)] hover-glow">
-        <div className="flex flex-col gap-8 p-6 lg:flex-row lg:items-center">
+    <section
+      ref={ref}
+      id="our-story"
+      className="py-24 sm:py-32 bg-[#000000] border-t border-white/[0.08]"
+      aria-labelledby="about-heading"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
+        <div className="flex flex-col gap-12 lg:flex-row lg:items-center">
           <div
-            className={`flex-1 space-y-4 transition-all duration-700 ${isInView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"}`}
+            className={`flex-1 space-y-6 transition-all duration-700 ${
+              isInView ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-8"
+            }`}
           >
-            <p className="inline-flex items-center rounded-full bg-indigo-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-indigo-700">
-              Our story
-            </p>
-            <h3
+            <div className="text-[11px] font-medium tracking-[0.22em] text-amber-500 uppercase">
+              Our Story
+            </div>
+            <h2
               id="about-heading"
-              className="text-3xl font-bold text-slate-900 md:text-4xl"
+              className="font-['Playfair_Display',serif] text-4xl sm:text-5xl lg:text-6xl font-normal text-[#f5f3ee] tracking-[-0.03em] leading-[1.02]"
             >
-              About Tasin Car Loans
-            </h3>
-            <p className="text-sm text-slate-600 md:text-base">
-              Tasin Car links discerning travelers with meticulously serviced
-              rides. From black-tie evenings to cross-country escapes, we tailor
-              luxury on loan so every journey feels personal. Expect concierge
-              check-ins, curated add-ons, and pricing that keeps surprises off
-              the invoice.
+              Mobility, curated for distinction.
+            </h2>
+            <p className="text-base text-slate-300 font-light leading-relaxed">
+              TASIN MOBILITY links corporate executives, diplomats, and discerning travelers
+              with impeccably prepared vehicles. From high-stakes boardroom arrivals to private
+              evening engagements, our chauffeur and self-drive fleet guarantees discretion,
+              punctuality, and refined automotive pedigree.
             </p>
 
-            <ul
-              className={`grid gap-4 sm:grid-cols-2 ${isInView ? "stagger-children" : "opacity-0"}`}
-            >
+            <ul className="grid gap-3.5 sm:grid-cols-2 pt-2">
               {highlights.map((item) => (
                 <li
                   key={item}
-                  className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-4 text-sm text-slate-700"
+                  className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 text-xs sm:text-sm text-slate-300"
                 >
-                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-600">
-                    ✓
+                  <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-400">
+                    <Check className="h-3 w-3" />
                   </span>
-                  {item}
+                  <span className="leading-snug">{item}</span>
                 </li>
               ))}
             </ul>
           </div>
 
           <div
-            className={`flex-1 transition-all duration-700 delay-200 ${isInView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"}`}
+            className={`flex-1 transition-all duration-700 delay-200 ${
+              isInView ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8"
+            }`}
           >
-            <div className="relative h-[360px] w-full overflow-hidden rounded-[28px] border border-slate-100 bg-slate-200 shadow-2xl group">
+            <div className="relative aspect-[4/3] w-full overflow-hidden border border-white/[0.1] bg-[#07080a] group">
               <img
-                src={randomImage}
-                alt="Luxury car ready for loan"
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                src={brandImage}
+                alt="Luxury vehicle fleet"
+                className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105 brightness-[0.93]"
                 loading="lazy"
               />
-              <div className="absolute bottom-4 left-4 rounded-2xl bg-white/90 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-800 shadow backdrop-blur-sm">
-                15 years redefining rentals
+              <div className="absolute bottom-4 left-4 border border-white/[0.14] bg-black/70 backdrop-blur-md px-4 py-2 text-xs font-medium uppercase tracking-wider text-[#f5f3ee]">
+                Executive Fleet Standards
               </div>
             </div>
           </div>
@@ -74,3 +80,5 @@ export const About = () => {
     </section>
   );
 };
+
+export default About;

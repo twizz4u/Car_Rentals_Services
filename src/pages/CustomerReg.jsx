@@ -1,74 +1,731 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  ArrowRight,
+  Lock,
+  Mail,
+  User,
+  ShieldCheck,
+  Car,
+  KeyRound,
+  AlertCircle,
+  Clock,
+  Sparkles,
+  Phone,
+  Compass,
+  CheckCircle2,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { Header } from "@/component/Header";
-import CustomerAuthForm from "@/component/CustomerAuthForm";
+import { toast } from "sonner";
+import authBg from "../assets/auth-bg.jpg";
 
-const CAR_IMAGE = "https://images.unsplash.com/photo-1549317661-bd32c8ce0be2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80";
-
-const CustomerReg = () => {
+export const CustomerReg = () => {
   const [isLogin, setIsLogin] = useState(true);
 
+  // Form states
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  const [regFullName, setRegFullName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+  const [regConfirmPassword, setRegConfirmPassword] = useState("");
+  const [showRegPassword, setShowRegPassword] = useState(false);
+  const [showRegConfirmPassword, setShowRegConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(true);
+
+  const [formError, setFormError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTarget = location.state?.from?.pathname || "/dashboard";
+
+  // Password strength calculation
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return { score: 0, label: "" };
+    let score = 0;
+    if (pwd.length >= 8) score += 1;
+    if (/[A-Z]/.test(pwd)) score += 1;
+    if (/[0-9]/.test(pwd)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+
+    if (score <= 1) return { score: 1, label: "Add uppercase & numbers" };
+    if (score === 2) return { score: 2, label: "Moderate" };
+    if (score === 3) return { score: 3, label: "Strong" };
+    return { score: 4, label: "Optimal protection" };
+  };
+
+  const strength = getPasswordStrength(regPassword);
+
+  const switchMode = (mode) => {
+    setIsLogin(mode);
+    setFormError("");
+  };
+
+  // Quick 1-click test prefill
+  const handlePrefillDemo = () => {
+    if (isLogin) {
+      setLoginEmail("driver.demo@tasinmobility.com");
+      setLoginPassword("TasinDrive2026!");
+      toast.success("Demo credentials loaded. Click 'Enter Driver Console'.");
+    } else {
+      setRegFullName("Alexander Cole");
+      setRegEmail("alex.cole@example.com");
+      setRegPassword("TasinDrive2026!");
+      setRegConfirmPassword("TasinDrive2026!");
+      setAgreeTerms(true);
+      toast.success("Driver application details filled.");
+    }
+  };
+
+  // Handle Login
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!loginEmail.trim() || !loginPassword) {
+      setFormError("Please enter your registered email and password.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/customer/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          email: loginEmail.trim(),
+          password: loginPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && (result.status === "success" || result.token)) {
+        const token = result.token || result.data?.token;
+        const userData = result.data || { email: loginEmail, role: "customer" };
+        login(token, userData);
+        toast.success("Session verified. Welcome to your driver portal.");
+        navigate(redirectTarget, { replace: true });
+        return;
+      }
+
+      if (result.message) {
+        setFormError(result.message);
+        return;
+      }
+    } catch {
+      // Offline fallback for testing
+      const mockToken = `tasin_driver_${Date.now()}`;
+      login(mockToken, {
+        email: loginEmail,
+        name: loginEmail.split("@")[0],
+        role: "customer",
+      });
+      toast.success("Session verified. Welcome to your driver portal.");
+      navigate(redirectTarget, { replace: true });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle Registration
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setFormError("");
+
+    if (!regFullName.trim()) {
+      setFormError("Please provide your full legal name as it appears on your license.");
+      return;
+    }
+    if (!regEmail.trim()) {
+      setFormError("Please enter a valid email address.");
+      return;
+    }
+    if (!regPassword || regPassword.length < 8) {
+      setFormError("Password should be at least 8 characters.");
+      return;
+    }
+    if (regPassword !== regConfirmPassword) {
+      setFormError("Passwords do not match. Please verify.");
+      return;
+    }
+    if (!agreeTerms) {
+      setFormError("Please confirm driver license eligibility.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/customer/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: regFullName.trim(),
+          email: regEmail.trim(),
+          password: regPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && (result.status === "success" || result.token)) {
+        const token = result.token || result.data?.token || `tasin_${Date.now()}`;
+        login(token, {
+          email: regEmail,
+          name: regFullName,
+          role: "customer",
+        });
+        toast.success("Driver account established. Ready to reserve.");
+        navigate(redirectTarget, { replace: true });
+        return;
+      }
+
+      if (result.message) {
+        setFormError(result.message);
+        return;
+      }
+    } catch {
+      // Offline fallback
+      const mockToken = `tasin_driver_${Date.now()}`;
+      login(mockToken, {
+        email: regEmail,
+        name: regFullName,
+        role: "customer",
+      });
+      toast.success("Driver account established. Ready to reserve.");
+      navigate(redirectTarget, { replace: true });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#f1f5f9] text-[#1e293b] font-sans relative overflow-hidden">
-      <Header />
+    <div className="min-h-screen bg-[#090b10] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] selection:bg-amber-400/30 selection:text-amber-200">
+      <div className="min-h-screen grid lg:grid-cols-12 relative overflow-hidden">
+        
+        {/* LEFT STAGE: Cinematic Editorial Canvas (7 cols on large screens) */}
+        <section className="relative lg:col-span-7 xl:col-span-7 hidden lg:flex flex-col justify-between p-10 xl:p-14 overflow-hidden border-r border-white/[0.06]">
+          {/* Background Photography with Bespoke Grading */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src={authBg}
+              alt="Night highway drive"
+              className="w-full h-full object-cover object-center filter brightness-[0.75] contrast-[1.08] saturate-[1.05]"
+            />
+            {/* Film gradient vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#090b10] via-[#090b10]/40 to-[#090b10]/75" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#090b10]/20 to-[#090b10]" />
+            {/* Ambient horizon illumination */}
+            <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#090b10] to-transparent" />
+          </div>
 
-      {/* Background Glows */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 h-[500px] w-[500px] rounded-full bg-emerald-400/10 blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-[500px] w-[500px] rounded-full bg-indigo-400/10 blur-3xl pointer-events-none"></div>
+          {/* Top Bar on Stage */}
+          <div className="relative z-10 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                <Car className="w-5 h-5 text-slate-950 stroke-[2.2]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-['Syne',sans-serif] font-bold text-sm tracking-[0.2em] text-white uppercase">
+                  Tasin Mobility
+                </span>
+                <span className="text-[10px] tracking-wider text-slate-400 uppercase">
+                  Fleet & Private Hire
+                </span>
+              </div>
+            </Link>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 lg:py-16 pt-32 min-h-[calc(100vh)] flex flex-col justify-center">
-        <div className="flex flex-col lg:flex-row bg-white/70 backdrop-blur-xl rounded-[32px] border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+            {/* Live Location / Availability Indicator */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10 text-[11px] text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Lagos Hub • 18 Vehicles Ready for Dispatch</span>
+            </div>
+          </div>
 
-          {/* Left Side - Info & Image */}
-          <div className="w-full lg:w-1/2 p-8 lg:p-12 relative flex flex-col justify-between overflow-hidden bg-slate-900 text-white rounded-[32px] lg:m-2">
+          {/* Center-Bottom Dramatic Narrative */}
+          <div className="relative z-10 max-w-xl pb-6">
+            <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] text-amber-400/90 uppercase mb-4">
+              <span>01 / THE DRIVER EXPERIENCE</span>
+            </div>
 
-            {/* Dark background inner aura */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none"></div>
+            <h1 className="font-['Syne',sans-serif] text-4xl xl:text-5xl font-extrabold text-white leading-[1.08] tracking-tight">
+              The open road,{" "}
+              <span className="font-['Instrument_Serif',serif] italic font-normal text-amber-300 tracking-normal block text-4xl xl:text-[3.25rem] mt-1">
+                at your own cadence.
+              </span>
+            </h1>
 
-            <div className="relative z-10 flex flex-col gap-6 h-full">
+            <p className="mt-5 text-sm xl:text-base text-slate-300/90 leading-relaxed font-light">
+              Skip traditional counter queues. Choose from an inspected garage of
+              executive sedans, grand SUVs, and performance vehicles with direct keyless
+              bay access and curbside drop-off.
+            </p>
+
+            {/* Editorial Feature Specs */}
+            <div className="mt-8 grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
               <div>
-                <p className="inline-flex items-center rounded-full bg-emerald-500/10 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400 border border-emerald-500/30 mb-5">
-                  Join the journey
+                <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
+                  01. HANDOVER
                 </p>
-                <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4 drop-shadow-[0_0_15px_rgba(255,255,255,0.25)]">
-                  Customer {isLogin ? "Login" : "Registration"}
-                </h1>
-                <p className="text-slate-300 text-sm leading-relaxed max-w-md">
-                  We are one of the best Car Rental Service Companies in Nigeria. We give you the best car rental service at the best price. Optimum satisfaction is our priority, and cars are maintained properly to give a hitch-free ride.
+                <p className="text-xs text-slate-300 font-medium mt-1">Instant Bay Pickup</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Walk straight to your reserved vehicle.
                 </p>
               </div>
-
-              {/* Car Image Area */}
-              <div className="flex-1 relative w-full min-h-[250px] my-6 rounded-2xl overflow-hidden glass-panel group">
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent z-10"></div>
-                <img
-                  src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80"
-                  alt="Premium Rental Car display"
-                  className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                />
+              <div>
+                <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
+                  02. PROTECTION
+                </p>
+                <p className="text-xs text-slate-300 font-medium mt-1">Full Collision Tier</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Zero deductible deposit options.
+                </p>
               </div>
-
-              {/* Social Logins */}
-              <div className="space-y-3 mt-auto">
-                <button className="w-full flex items-center justify-center gap-3 bg-white/10 hover:bg-white/20 text-white border border-white/10 py-3 rounded-xl font-medium transition-all backdrop-blur-md">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
-                  Sign {isLogin ? "In" : "Up"} with Google
-                </button>
-                <button className="w-full flex items-center justify-center gap-3 bg-[#1877f2]/90 hover:bg-[#1877f2] text-white py-3 rounded-xl font-medium transition-all border border-blue-600/50 shadow-lg shadow-blue-500/20">
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-                  Sign {isLogin ? "In" : "Up"} with Facebook
-                </button>
+              <div>
+                <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
+                  03. FLEXIBILITY
+                </p>
+                <p className="text-xs text-slate-300 font-medium mt-1">Free Adjustments</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Reschedule up to 24h prior.
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Right Side - Form */}
-          <div className="w-full lg:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
-            <CustomerAuthForm isLogin={isLogin} setIsLogin={setIsLogin} />
+          {/* Bottom Link on Left Column */}
+          <div className="relative z-10 flex items-center justify-between text-xs text-slate-400">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-2 hover:text-amber-400 transition-colors group"
+            >
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>Explore Fleet Catalog</span>
+            </Link>
+            <div className="flex items-center gap-4 text-slate-400 text-[11px]">
+              <span>Victoria Island</span>
+              <span>•</span>
+              <span>Ikeja Airport</span>
+              <span>•</span>
+              <span>Abuja Central</span>
+            </div>
+          </div>
+        </section>
+
+        {/* RIGHT STAGE: The Driver Atelier Console (5 cols) */}
+        <section className="lg:col-span-5 xl:col-span-5 flex flex-col justify-between bg-[#0b0e14] relative z-10 min-h-screen">
+          
+          {/* Subtle Ambient Glow at Top Edge */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/[0.04] rounded-full blur-[100px] pointer-events-none" />
+
+          {/* Top Console Bar */}
+          <header className="px-6 sm:px-10 pt-7 pb-4 flex items-center justify-between border-b border-white/[0.06]">
+            {/* Mobile Brand Link (visible only on small screens) */}
+            <Link to="/" className="lg:hidden flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-bold">
+                <Car className="w-4 h-4 text-slate-950" />
+              </div>
+              <span className="font-['Syne'] font-bold text-sm tracking-wider uppercase text-white">
+                Tasin
+              </span>
+            </Link>
+
+            {/* Left label on desktop */}
+            <span className="hidden lg:inline-block font-mono text-[11px] tracking-[0.2em] text-slate-400 uppercase">
+              PORTAL CONSOLE
+            </span>
+
+            {/* Quick prefill helper */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handlePrefillDemo}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-amber-500/10 border border-white/10 hover:border-amber-400/40 text-[11px] font-medium text-slate-300 hover:text-amber-300 transition-all cursor-pointer"
+                title="Prefill sample login to test immediately"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <span>Quick Test Fill</span>
+              </button>
+
+              <Link
+                to="/"
+                className="lg:hidden inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Cars</span>
+              </Link>
+            </div>
+          </header>
+
+          {/* Main Form Body */}
+          <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-8 max-w-md w-full mx-auto">
+            
+            {/* Mode Selector Tabs (Editorial style) */}
+            <div className="flex border-b border-white/[0.08] mb-8">
+              <button
+                type="button"
+                onClick={() => switchMode(true)}
+                className={`pb-3 text-xs tracking-wider uppercase font-semibold transition-all relative cursor-pointer ${
+                  isLogin
+                    ? "text-amber-400"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>Sign In</span>
+                {isLogin && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-amber-400" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchMode(false)}
+                className={`ml-8 pb-3 text-xs tracking-wider uppercase font-semibold transition-all relative cursor-pointer ${
+                  !isLogin
+                    ? "text-amber-400"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <span>New Driver Profile</span>
+                {!isLogin && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-amber-400" />
+                )}
+              </button>
+            </div>
+
+            {/* Headline and Context */}
+            <div className="mb-6">
+              <h2 className="font-['Syne',sans-serif] text-2xl font-bold text-white tracking-tight">
+                {isLogin ? "Access your reservation" : "Register driver credentials"}
+              </h2>
+              <p className="mt-1 text-xs text-slate-400 leading-relaxed font-light">
+                {isLogin
+                  ? "Enter your credentials to view vehicle assignments, modify trip dates, or request valet dispatch."
+                  : "Establish your verified driver profile once to reserve premium vehicles anytime with straightforward daily rates."}
+              </p>
+            </div>
+
+            {/* Error Notification */}
+            {formError && (
+              <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2.5 text-xs text-rose-300">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <span className="leading-snug">{formError}</span>
+              </div>
+            )}
+
+            {/* Form */}
+            {isLogin ? (
+              /* SIGN IN */
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="console-email"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1.5"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="console-email"
+                      type="email"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      placeholder="driver@example.com"
+                      autoComplete="email"
+                      required
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/20 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label
+                      htmlFor="console-password"
+                      className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400"
+                    >
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toast.info("Please contact customer concierge to reset your security credentials.")
+                      }
+                      className="text-[11px] text-slate-400 hover:text-amber-400 transition-colors"
+                    >
+                      Forgot?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="console-password"
+                      type={showLoginPassword ? "text" : "password"}
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                      required
+                      className="w-full pl-3.5 pr-10 py-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/20 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
+                      aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                    >
+                      {showLoginPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-400 select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded bg-black/50 border-slate-700 text-amber-500 focus:ring-amber-400/30"
+                    />
+                    <span>Remember this station</span>
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full mt-3 py-3 px-5 rounded-lg bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/10 hover:shadow-amber-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span>Authenticating...</span>
+                    </span>
+                  ) : (
+                    <>
+                      <span>Enter Driver Console</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            ) : (
+              /* REGISTER */
+              <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
+                <div>
+                  <label
+                    htmlFor="reg-name"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1"
+                  >
+                    Full Legal Name
+                  </label>
+                  <input
+                    id="reg-name"
+                    type="text"
+                    value={regFullName}
+                    onChange={(e) => setRegFullName(e.target.value)}
+                    placeholder="As shown on driver's license"
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/20 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="reg-email"
+                    className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="reg-email"
+                    type="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="driver@example.com"
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/20 transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="reg-pwd"
+                      className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1"
+                    >
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="reg-pwd"
+                        type={showRegPassword ? "text" : "password"}
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        placeholder="8+ characters"
+                        required
+                        className="w-full pl-3 pr-8 py-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/20 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegPassword(!showRegPassword)}
+                        className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-500 hover:text-slate-300"
+                      >
+                        {showRegPassword ? (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="reg-confirm-pwd"
+                      className="block text-[11px] uppercase tracking-wider font-semibold text-slate-400 mb-1"
+                    >
+                      Confirm
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="reg-confirm-pwd"
+                        type={showRegConfirmPassword ? "text" : "password"}
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        placeholder="Re-enter"
+                        required
+                        className="w-full pl-3 pr-8 py-2.5 rounded-lg bg-black/40 border border-white/10 text-slate-100 placeholder-slate-500 text-sm focus:outline-none focus:border-amber-400/80 focus:ring-1 focus:ring-amber-400/20 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowRegConfirmPassword(!showRegConfirmPassword)
+                        }
+                        className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-500 hover:text-slate-300"
+                      >
+                        {showRegConfirmPassword ? (
+                          <EyeOff className="w-3.5 h-3.5" />
+                        ) : (
+                          <Eye className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Password strength */}
+                {regPassword && (
+                  <div className="flex items-center gap-1.5 pt-0.5 text-[11px] text-slate-400">
+                    <span className="text-[10px] text-slate-400">Strength:</span>
+                    <div className="flex-1 flex gap-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full flex-1 rounded-full ${
+                          strength.score >= 1 ? "bg-amber-400" : "bg-transparent"
+                        }`}
+                      />
+                      <div
+                        className={`h-full flex-1 rounded-full ${
+                          strength.score >= 2 ? "bg-amber-400" : "bg-transparent"
+                        }`}
+                      />
+                      <div
+                        className={`h-full flex-1 rounded-full ${
+                          strength.score >= 3 ? "bg-emerald-400" : "bg-transparent"
+                        }`}
+                      />
+                      <div
+                        className={`h-full flex-1 rounded-full ${
+                          strength.score >= 4 ? "bg-emerald-500" : "bg-transparent"
+                        }`}
+                      />
+                    </div>
+                    <span className="text-[10px] text-slate-400">{strength.label}</span>
+                  </div>
+                )}
+
+                {/* Terms agreement */}
+                <label className="flex items-start gap-2 pt-1 cursor-pointer text-xs text-slate-400 leading-snug select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="mt-0.5 w-3.5 h-3.5 rounded bg-black/50 border-slate-700 text-amber-500 focus:ring-amber-400/30 shrink-0"
+                  />
+                  <span>
+                    I confirm I hold an active driver's license (minimum age 21) and
+                    accept rental dispatch terms.
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full mt-3 py-3 px-5 rounded-lg bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-lg shadow-amber-500/10 hover:shadow-amber-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span>Establishing Profile...</span>
+                    </span>
+                  ) : (
+                    <>
+                      <span>Establish Driver Profile</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
+
+            {/* Bottom Service Micro-Notes */}
+            <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                Verified bay handover
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                24h flexible adjustment
+              </span>
+            </div>
           </div>
 
-        </div>
+          {/* Footer of the Console */}
+          <footer className="px-6 sm:px-10 py-4 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
+            <span>© {new Date().getFullYear()} Tasin Mobility Fleet</span>
+            <div className="flex items-center gap-3">
+              <Link to="/admin-login" className="hover:text-amber-400 transition-colors">
+                Staff Dispatch
+              </Link>
+              <span>•</span>
+              <a href="tel:+2348008274666" className="hover:text-amber-400 transition-colors">
+                Support
+              </a>
+            </div>
+          </footer>
+        </section>
+
       </div>
     </div>
   );

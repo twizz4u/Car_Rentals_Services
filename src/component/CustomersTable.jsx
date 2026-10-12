@@ -26,7 +26,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-export default function CustomersTable({ data = [], isLoading = false }) {
+export default function CustomersTable({ data = [] }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");

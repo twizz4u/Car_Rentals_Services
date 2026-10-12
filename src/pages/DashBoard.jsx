@@ -83,7 +83,7 @@ export const DashBoard = () => {
       const promises = [
         // 1. Stats
         !dashCache.stats
-          ? fetch("http://127.0.0.1:8000/api/carStats", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
+          ? fetch("http://127.0.0.1:8000/api/cars/stats", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
           : Promise.resolve({ cached: true, ...dashCache.stats }),
 
         // 2. Rentals
@@ -98,7 +98,7 @@ export const DashBoard = () => {
 
         // 4. Orders
         !dashCache.orders
-          ? fetch("http://127.0.0.1:8000/api/recentRentalOrders", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
+          ? fetch("http://127.0.0.1:8000/api/rentalOrders/recent", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
           : Promise.resolve({ cached: true, _orders: dashCache.orders }), // Use _orders wrapper to distinguish cache
 
         // 5. Visits

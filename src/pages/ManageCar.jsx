@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { carsDashData } from "../assets/data";
 import Sidebar from "@/component/Sidebar";
 import TopNav from "@/component/TopNav";
@@ -45,10 +45,9 @@ export const ManageCar = () => {
   const [editingCar, setEditingCar] = useState(null);
   const [globalFilter, setGlobalFilter] = useState("");
   const [rowSelection, setRowSelection] = useState({});
-  const [lastDeleted, setLastDeleted] = useState([]);
   const [sorting, setSorting] = useState([]);
 
-  function fetchCars() {
+  const fetchCars = useCallback(() => {
     if (!token) {
       setCars(carsDashData);
       setLoading(false);
@@ -56,7 +55,7 @@ export const ManageCar = () => {
     }
 
     setLoading(true);
-    fetch("http://127.0.0.1:8000/api/carsAdmin", {
+    fetch("http://127.0.0.1:8000/api/cars/admin", {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -91,66 +90,179 @@ export const ManageCar = () => {
         setCars(carsDashData);
       })
       .finally(() => setLoading(false));
-  }
+  }, [token]);
 
   useEffect(() => {
     fetchCars();
-  }, [token]);
+  }, [fetchCars]);
 
   function saveCar() {
     // Refetch fresh data from backend to ensure images and all fields are in sync
     fetchCars();
   }
 
-  function deleteSelected() {
-    console.log("Deleting selected cars:", rowSelection);
+  async function deleteCarRequest(id) {
+    const response = await fetch(`http://127.0.0.1:8000/api/cars/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) throw new Error(`Failed to delete car ${id}`);
+    return true;
+  }
+
+  async function restoreCarRequest(id) {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/cars/${id}/restore`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      },
+    );
+
+    if (!response.ok) throw new Error(`Failed to restore car ${id}`);
+    return true;
+  }
+
+  // The backend endpoint toggles publish state, so only call it for cars that
+  // are not already in the desired state.
+  async function togglePublishRequest(id) {
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/cars/${id}/publish`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!response.ok)
+      throw new Error(`Failed to toggle publish status for ${id}`);
+    return true;
+  }
+
+  async function deleteSelected() {
     const ids = Object.keys(rowSelection);
+    if (!ids.length) return;
 
     const removed = cars.filter((car) => ids.includes(String(car.id)));
 
-    setLastDeleted(removed);
+    try {
+      await Promise.all(ids.map((id) => deleteCarRequest(id)));
 
-    console.log(removed);
+      setCars((prev) => prev.filter((c) => !ids.includes(String(c.id))));
+      setRowSelection({});
 
-    setCars((prev) => prev.filter((c) => !rowSelection[c.id]));
-    setRowSelection({});
-
-    toast(`${removed.length} car(s) deleted`, {
-      description: "You can undo this action",
-      action: (
-        <Button variant="outline" size="sm" onClick={() => undoDelete(removed)}>
-          Undo
-        </Button>
-      ),
-    });
-
-    console.log("cars after delete:", cars);
+      const toastId = `bulk-delete-${Date.now()}`;
+      toast(`${removed.length} car(s) deleted`, {
+        id: toastId,
+        description: "You can undo this action",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              toast.dismiss(toastId);
+              undoDelete(removed.map((car) => car.id));
+            }}
+          >
+            Undo
+          </Button>
+        ),
+      });
+    } catch (error) {
+      console.error("Failed to delete selected cars:", error);
+      toast.error("Failed to delete the selected cars");
+      fetchCars();
+    }
   }
 
-  function undoDelete(itemsrestored) {
-    setCars((prev) => {
-      const combined = [...prev, ...itemsrestored];
-      return combined.sort((a, b) => a.id - b.id);
-    });
-    setLastDeleted([]);
-    setRowSelection({});
-    table.setPageIndex(0);
-    console.log("cars after undo:", cars);
-
-    toast("Cars restored successfully");
+  async function undoDelete(ids) {
+    try {
+      await Promise.all(ids.map((id) => restoreCarRequest(id)));
+      setRowSelection({});
+      table.setPageIndex(0);
+      fetchCars();
+      toast("Cars restored successfully");
+    } catch (error) {
+      console.error("Failed to restore cars:", error);
+      toast.error("Failed to restore the cars");
+      fetchCars();
+    }
   }
 
-  function bulkPublish(value) {
-    setCars((prev) =>
-      prev.map((c) => (rowSelection[c.id] ? { ...c, published: value } : c)),
+  // "Publish"/"Draft" for the selected rows. The API toggles the state, so only
+  // the cars that are not already in the requested state are sent.
+  async function bulkPublish(value) {
+    const ids = Object.keys(rowSelection);
+    if (!ids.length) return;
+
+    const targets = cars.filter(
+      (car) => ids.includes(String(car.id)) && car.published !== value,
     );
-    toast(value ? "Published" : "Moved to draft");
-    setRowSelection({});
+
+    if (!targets.length) {
+      setRowSelection({});
+      toast(value ? "Already published" : "Already in draft");
+      return;
+    }
+
+    const targetIds = targets.map((car) => String(car.id));
+
+    try {
+      await Promise.all(targets.map((car) => togglePublishRequest(car.id)));
+
+      setCars((prev) =>
+        prev.map((c) =>
+          targetIds.includes(String(c.id)) ? { ...c, published: value } : c,
+        ),
+      );
+      setRowSelection({});
+      toast(value ? "Cars published" : "Cars moved to draft");
+    } catch (error) {
+      console.error("Failed to update publish state:", error);
+      toast.error("Failed to update the selected cars");
+      fetchCars();
+    }
   }
 
-  function deleteCar(id) {
-    console.log("Deleting car with id:", id);
-    setCars((prev) => prev.filter((c) => c.id !== id));
+  async function deleteCar(id) {
+    try {
+      await deleteCarRequest(id);
+
+      setCars((prev) => prev.filter((c) => String(c.id) !== String(id)));
+
+      const toastId = `delete-${id}-${Date.now()}`;
+      toast("Car deleted", {
+        id: toastId,
+        description: "You can undo this action",
+        action: (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              toast.dismiss(toastId);
+              undoDelete([id]);
+            }}
+          >
+            Undo
+          </Button>
+        ),
+      });
+    } catch (error) {
+      console.error("Failed to delete car:", error);
+      toast.error("Failed to delete the car");
+      fetchCars();
+    }
   }
 
   function editCar(car) {
@@ -166,37 +278,29 @@ export const ManageCar = () => {
 
     // Optimistically update the UI to feel responsive
     setCars((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, published: !c.published } : c))
+      prev.map((c) => (c.id === id ? { ...c, published: !c.published } : c)),
     );
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/toggleCarPublish/${id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      });
+      await togglePublishRequest(id);
 
-      if (!response.ok) {
-        throw new Error("Failed to toggle publish status");
-      }
-
-      const data = await response.json();
-      toast.success(data.message || (previousPublishedState ? "Car moved to draft" : "Car published successfully"));
-
+      toast.success(
+        previousPublishedState
+          ? "Car moved to draft"
+          : "Car published successfully",
+      );
     } catch (error) {
       console.error("Error toggling publish status:", error);
       toast.error("Failed to update status. Reverting change.");
 
       // Revert the optimistic update on failure
       setCars((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, published: previousPublishedState } : c))
+        prev.map((c) =>
+          c.id === id ? { ...c, published: previousPublishedState } : c,
+        ),
       );
     }
   }
-
 
   const columns = [
     {
@@ -220,7 +324,8 @@ export const ManageCar = () => {
     {
       header: ({ table }) => {
         const sorting = table.getState().sorting[0];
-        const isSorted = sorting?.id === "name" || sorting?.id === "created_at_ts";
+        const isSorted =
+          sorting?.id === "name" || sorting?.id === "created_at_ts";
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -230,23 +335,39 @@ export const ManageCar = () => {
               >
                 Car
                 {isSorted ? (
-                  sorting?.desc ? <ArrowDown className="w-4 h-4 text-indigo-600" /> : <ArrowUp className="w-4 h-4 text-indigo-600" />
+                  sorting?.desc ? (
+                    <ArrowDown className="w-4 h-4 text-indigo-600" />
+                  ) : (
+                    <ArrowUp className="w-4 h-4 text-indigo-600" />
+                  )
                 ) : (
                   <ArrowUpDown className="w-4 h-4 text-gray-400" />
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem onClick={() => table.setSorting([{ id: "name", desc: false }])}>
+              <DropdownMenuItem
+                onClick={() => table.setSorting([{ id: "name", desc: false }])}
+              >
                 Alphabetical (A-Z)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => table.setSorting([{ id: "name", desc: true }])}>
+              <DropdownMenuItem
+                onClick={() => table.setSorting([{ id: "name", desc: true }])}
+              >
                 Alphabetical (Z-A)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => table.setSorting([{ id: "created_at_ts", desc: true }])}>
+              <DropdownMenuItem
+                onClick={() =>
+                  table.setSorting([{ id: "created_at_ts", desc: true }])
+                }
+              >
                 Time Added (Newest)
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => table.setSorting([{ id: "created_at_ts", desc: false }])}>
+              <DropdownMenuItem
+                onClick={() =>
+                  table.setSorting([{ id: "created_at_ts", desc: false }])
+                }
+              >
                 Time Added (Oldest)
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -267,16 +388,27 @@ export const ManageCar = () => {
       cell: ({ row }) => {
         let src = row.original.image;
         if (src && typeof src === "string") {
-          if (!src.startsWith("http") && !src.startsWith("blob:") && !src.startsWith("data:") && !src.startsWith("cars/")) {
+          if (
+            !src.startsWith("http") &&
+            !src.startsWith("blob:") &&
+            !src.startsWith("data:") &&
+            !src.startsWith("cars/")
+          ) {
             src = `http://127.0.0.1:8000/storage/${src}`;
           }
         } else {
           src = null;
         }
         return src ? (
-          <img src={src} alt={row.original.name} className="w-16 h-10 object-cover rounded-md border" />
+          <img
+            src={src}
+            alt={row.original.name}
+            className="w-16 h-10 object-cover rounded-md border"
+          />
         ) : (
-          <div className="w-16 h-10 bg-gray-100 rounded-md flex items-center justify-center text-[10px] text-gray-400 border">N/A</div>
+          <div className="w-16 h-10 bg-gray-100 rounded-md flex items-center justify-center text-[10px] text-gray-400 border">
+            N/A
+          </div>
         );
       },
     },
@@ -374,12 +506,12 @@ export const ManageCar = () => {
         />
         <section className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2 md:px-0">
-            <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">
-              Manage Cars
-            </h1>
             <Button
-              onClick={() => { setEditingCar(null); setModalOpen(true); }}
-              className="w-full sm:w-auto shadow-sm hover:shadow-md transition-shadow"
+              onClick={() => {
+                setEditingCar(null);
+                setModalOpen(true);
+              }}
+              className="w-full block ml-auto sm:w-auto shadow-sm hover:shadow-md transition-shadow"
             >
               Add New vehicle
             </Button>
@@ -430,9 +562,15 @@ export const ManageCar = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {table.getRowModel().rows.map((row) => (
-                        <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                        <tr
+                          key={row.id}
+                          className="hover:bg-slate-50/50 transition-colors"
+                        >
                           {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="px-4 py-4 text-sm text-slate-600">
+                            <td
+                              key={cell.id}
+                              className="px-4 py-4 text-sm text-slate-600"
+                            >
                               {flexRender(
                                 cell.column.columnDef.cell,
                                 cell.getContext(),
@@ -480,7 +618,10 @@ export const ManageCar = () => {
 
           <CarFormModal
             open={modalOpen}
-            onClose={() => { setEditingCar(null); setModalOpen(false); }}
+            onClose={() => {
+              setEditingCar(null);
+              setModalOpen(false);
+            }}
             onSave={saveCar}
             car={editingCar}
           />
@@ -490,17 +631,20 @@ export const ManageCar = () => {
   );
 };
 
-
 function StatusBadge({ status }) {
   const map = {
     available: "bg-green-100 text-green-700",
     rented: "bg-blue-100 text-blue-700",
+    "All rented": "bg-blue-100 text-blue-700",
     maintenance: "bg-yellow-100 text-yellow-700",
+    draft: "bg-slate-100 text-slate-600",
   };
 
   return (
-    <span className={`px-2 py-1 rounded-md text-xs ${map[status]}`}>
-      {status}
+    <span
+      className={`px-2 py-1 rounded-md text-xs capitalize ${map[status] || "bg-slate-100 text-slate-600"}`}
+    >
+      {status || "unknown"}
     </span>
   );
 }

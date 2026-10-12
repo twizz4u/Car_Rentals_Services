@@ -1,11 +1,30 @@
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
+import { X, Trash2, Plus, Minus, ArrowRight, Car, Check } from "lucide-react";
+import { resolveAsset, formatVehicleTitle } from "./CarDetails";
 
-// Helper to parse price string
+// Helper to parse price string like "₦150,000 / day" to number
 const parsePrice = (priceStr) => {
   if (typeof priceStr === "number") return priceStr;
   const match = priceStr?.match(/[\d,]+/);
   return match ? parseInt(match[0].replace(/,/g, ""), 10) : 0;
+};
+
+// Fallback image helper
+const getVehicleImage = (image, name = "", model = "") => {
+  if (image && !image.includes("placeholder")) {
+    return resolveAsset(image);
+  }
+  const lower = (name + " " + model).toLowerCase();
+  if (lower.includes("bmw")) return resolveAsset("/cars/BMW_7.webp");
+  if (lower.includes("cadillac")) return resolveAsset("/cars/Cadillac.webp");
+  if (lower.includes("genesis")) return resolveAsset("/cars/Genesis.webp");
+  if (lower.includes("lexus")) return resolveAsset("/cars/Lexus.webp");
+  if (lower.includes("lincoln")) return resolveAsset("/cars/Lincoln_Navigator.webp");
+  if (lower.includes("porsche")) return resolveAsset("/cars/Porsche.webp");
+  if (lower.includes("volvo")) return resolveAsset("/cars/Volvo.webp");
+  if (lower.includes("gmc")) return resolveAsset("/cars/GMC_Sierra.webp");
+  return resolveAsset("/cars/hero_mercedes_s580.jpg");
 };
 
 export const Cart = () => {
@@ -32,181 +51,237 @@ export const Cart = () => {
     navigate("/checkout");
   };
 
+  const handleBrowseFleet = () => {
+    closeCart();
+    const fleetEl = document.getElementById("fleet");
+    if (fleetEl) {
+      fleetEl.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <>
+    <div className="fixed inset-0 z-50 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity duration-300"
         onClick={closeCart}
+        aria-hidden="true"
       />
 
-      {/* Cart Panel */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col animate-slide-in-right">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900">Your Cart</h2>
-            <p className="text-sm text-slate-500">
-              {totalItems} {totalItems === 1 ? "car" : "cars"} selected
-            </p>
-          </div>
-          <button
-            onClick={closeCart}
-            className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {items.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-slate-400 text-lg">Your cart is empty</p>
-              <p className="text-slate-400 text-sm mt-1">
-                Add cars to get started
+      {/* Cart Drawer Panel */}
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-8 sm:pl-10">
+        <aside
+          className="w-screen max-w-md bg-[#090b0e] border-l border-white/[0.08] text-slate-300 shadow-2xl flex flex-col transform transition-transform ease-out duration-300"
+          aria-labelledby="booking-drawer-title"
+        >
+          {/* 1. Header Bar */}
+          <div className="px-6 py-5 border-b border-white/[0.06] bg-[#090b0e] flex items-center justify-between">
+            <div>
+              <span className="block text-[11px] font-medium uppercase tracking-[0.22em] text-amber-500">
+                Booking
+              </span>
+              <h2
+                id="booking-drawer-title"
+                className="mt-1 font-['Playfair_Display',serif] text-2xl font-normal text-[#f5f3ee] tracking-tight"
+              >
+                My Booking
+              </h2>
+              <p className="mt-1 text-xs text-slate-400 font-light">
+                {totalItems} {totalItems === 1 ? "vehicle" : "vehicles"} selected
               </p>
             </div>
-          ) : (
-            items.map((item) => {
-              const pricePerDay = parsePrice(
-                item.car.loanPrice || item.car.price
-              );
-              const itemTotal = pricePerDay * item.duration;
 
-              return (
-                <div
-                  key={item.car.name}
-                  className="bg-slate-50 rounded-2xl p-4 border border-slate-100"
+            <button
+              onClick={closeCart}
+              aria-label="Close booking drawer"
+              className="p-2 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* 2. Cart Items List */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {items.length === 0 ? (
+              <div className="text-center py-20 px-4 my-6">
+                <div className="w-12 h-12 rounded-full border border-white/[0.08] flex items-center justify-center mx-auto mb-4 text-slate-500">
+                  <Car className="w-5 h-5" />
+                </div>
+                <h3 className="font-['Playfair_Display',serif] text-lg font-normal text-[#f5f3ee]">
+                  Your booking list is empty
+                </h3>
+                <p className="text-xs text-slate-400 mt-2 max-w-xs mx-auto leading-relaxed font-light">
+                  Select vehicles from the showroom to customize your rental duration and proceed to checkout.
+                </p>
+                <button
+                  onClick={handleBrowseFleet}
+                  className="mt-6 inline-flex items-center gap-1.5 text-xs font-medium text-amber-500 hover:text-amber-400 transition-colors cursor-pointer"
                 >
-                  <div className="flex gap-4">
-                    <img
-                      src={item.car.image}
-                      alt={item.car.name}
-                      className="w-20 h-16 rounded-xl object-cover"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-slate-900">
-                        {item.car.name}
-                      </h4>
-                      <p className="text-xs text-slate-500">
-                        {item.car.model || item.car.category}
-                      </p>
-                      <p className="text-sm text-indigo-600 font-medium mt-1">
-                        ₦{pricePerDay.toLocaleString()} / day
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => removeFromCart(item.car.name)}
-                      className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
+                  <span>Browse available fleet</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              items.map((item) => {
+                const pricePerDay = parsePrice(item.car.loanPrice || item.car.price);
+                const itemTotal = pricePerDay * item.duration;
+                const carImg = getVehicleImage(item.car.image, item.car.name, item.car.model);
+                const fullTitle = formatVehicleTitle(item.car.name, item.car.model);
+                const rawSpecs =
+                  item.car.specs ||
+                  item.car.category ||
+                  "Automatic · 5 seats · Chauffeur available";
+                const specs = rawSpecs
+                  .replace(/\bSeats\b/g, "seats")
+                  .replace(/\bChauffeur\b(?! available)/g, "Chauffeur available")
+                  .replace(/\bDriver\b/g, "Chauffeur available");
 
-                  {/* Duration Controls */}
-                  <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm text-slate-600">Duration:</span>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() =>
-                            updateDuration(item.car.name, item.duration - 1)
-                          }
-                          disabled={item.duration <= 1}
-                          className="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 font-bold flex items-center justify-center hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                          −
-                        </button>
-                        <span className="w-12 text-center font-semibold text-slate-900">
-                          {item.duration}
-                        </span>
-                        <button
-                          onClick={() =>
-                            updateDuration(item.car.name, item.duration + 1)
-                          }
-                          className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center hover:bg-indigo-200 transition-colors"
-                        >
-                          +
-                        </button>
+                return (
+                  <div
+                    key={item.car.name}
+                    className="p-4 rounded-[4px] bg-[#0c0e13] border border-white/[0.06] space-y-3.5"
+                  >
+                    <div className="flex gap-3.5 items-start">
+                      {/* Vehicle Image */}
+                      <div className="relative w-24 h-16 rounded-[2px] overflow-hidden bg-[#07080a] shrink-0 border border-white/[0.06]">
+                        <img
+                          src={carImg}
+                          alt={fullTitle}
+                          className="w-full h-full object-cover object-center brightness-[0.93]"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=400&q=80";
+                          }}
+                        />
                       </div>
-                      <span className="text-sm text-slate-500">days</span>
+
+                      {/* Information */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="text-sm font-semibold text-[#f5f3ee] truncate leading-snug">
+                            {fullTitle}
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => removeFromCart(item.car.name)}
+                            title="Remove vehicle"
+                            className="p-1 text-slate-500 hover:text-red-400 transition-colors shrink-0 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <p className="mt-0.5 text-xs text-slate-400 font-light truncate">
+                          {specs}
+                        </p>
+
+                        <span className="mt-1.5 block text-xs font-semibold text-amber-500">
+                          ₦{pricePerDay.toLocaleString()}{" "}
+                          <span className="text-[11px] text-slate-500 font-normal">/ day</span>
+                        </span>
+                      </div>
                     </div>
-                    <span className="font-bold text-slate-900">
-                      ₦{itemTotal.toLocaleString()}
+
+                    {/* Duration & Line total */}
+                    <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-400 font-light">Duration</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => updateDuration(item.car.name, item.duration - 1)}
+                            disabled={item.duration <= 1}
+                            aria-label="Decrease duration"
+                            className="h-7 w-7 rounded-[3px] border border-white/[0.14] bg-white/[0.03] flex items-center justify-center text-slate-300 hover:border-amber-500 hover:text-amber-400 active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="min-w-12 text-center font-medium text-[#f5f3ee] text-xs">
+                            {item.duration} {item.duration === 1 ? "day" : "days"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateDuration(item.car.name, item.duration + 1)}
+                            aria-label="Increase duration"
+                            className="h-7 w-7 rounded-[3px] border border-white/[0.14] bg-white/[0.03] flex items-center justify-center text-slate-300 hover:border-amber-500 hover:text-amber-400 active:scale-95 transition-all cursor-pointer"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[11px] text-slate-500 block font-light">Line total</span>
+                        <span className="font-semibold text-[#f5f3ee] text-sm">
+                          ₦{itemTotal.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* 3. Pricing Summary & Checkout Actions */}
+          {items.length > 0 && (
+            <div className="border-t border-white/[0.06] bg-[#090b0e] p-6 space-y-4">
+              {/* Financial Breakdown */}
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between text-slate-400 font-light">
+                  <span>Rental rate</span>
+                  <span className="text-slate-200">₦{totalAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 font-light">
+                  <span>Service & pre-delivery check</span>
+                  <span className="text-slate-200">₦{serviceFee.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-slate-400 font-light">
+                  <span>VAT & insurance</span>
+                  <span className="text-slate-200">₦{tax.toLocaleString()}</span>
+                </div>
+
+                <div className="pt-3 border-t border-white/[0.06] flex justify-between items-baseline">
+                  <div>
+                    <span className="text-xs sm:text-sm font-semibold text-white uppercase tracking-wider block">
+                      TOTAL BOOKING COST
+                    </span>
+                    <span className="text-xs text-emerald-400/90 font-light flex items-center gap-1.5 mt-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Vehicle availability confirmed</span>
                     </span>
                   </div>
+                  <span className="text-lg font-semibold text-white">
+                    ₦{grandTotal.toLocaleString()}
+                  </span>
                 </div>
-              );
-            })
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={handleProceedToPayment}
+                  className="w-full h-11 bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Continue to checkout</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={clearCart}
+                  className="w-full py-1.5 text-xs text-slate-500 hover:text-red-400 transition-colors text-center cursor-pointer font-light"
+                >
+                  Clear booking
+                </button>
+              </div>
+            </div>
           )}
-        </div>
-
-        {/* Footer */}
-        {items.length > 0 && (
-          <div className="border-t border-slate-100 p-6 space-y-4">
-            {/* Summary */}
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-slate-600">
-                <span>Subtotal ({totalItems} cars)</span>
-                <span>₦{totalAmount.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Service fee (2%)</span>
-                <span>₦{serviceFee.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Tax (7.5%)</span>
-                <span>₦{tax.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t border-slate-200">
-                <span>Total</span>
-                <span>₦{grandTotal.toLocaleString()}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-2">
-              <button
-                onClick={handleProceedToPayment}
-                className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 py-4 text-sm font-bold uppercase tracking-wider text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-500 hover:to-indigo-600 active:scale-[0.98]"
-              >
-                Proceed to Payment
-              </button>
-              <button
-                onClick={clearCart}
-                className="w-full rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-              >
-                Clear Cart
-              </button>
-            </div>
-          </div>
-        )}
+        </aside>
       </div>
-    </>
+    </div>
   );
 };
+
+export default Cart;

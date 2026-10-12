@@ -22,7 +22,7 @@ export const Customers = () => {
     const fetchCustomers = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch("http://127.0.0.1:8000/api/customerStats", {
+        const response = await fetch("http://127.0.0.1:8000/api/customers/stats", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

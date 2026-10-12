@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import CarDetailsPage from "./pages/CarDetails";
 import AdminLogin from "./pages/AdminLogin";
 import CustomerLogin from "./pages/CustomerReg";
 import { DashBoard } from "./pages/Dashboard";
@@ -75,6 +76,7 @@ function App() {
             }
           />
           <Route path="/checkout" element={<PaymentPage />} />
+          <Route path="/car-details" element={<CarDetailsPage />} />
         </Routes>
       </CartProvider>
     </AuthProvider>

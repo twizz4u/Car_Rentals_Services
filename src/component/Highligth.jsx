@@ -1,76 +1,99 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { TopRated } from "../assets/data";
-import { HighligthData } from "./highligthdata";
-import { useInView } from "../hooks/useInView";
-
-const badges = ["Free delivery", "Zero deposit", "Instant approval"];
+import { HighligthData } from "./Highligthdata";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const Highligth = () => {
-  const [emblaRef] = useEmblaCarousel({ align: "start", dragFree: true });
-  const [isDragging] = useState(false);
-  const [ref, isInView] = useInView({ threshold: 0.1 });
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    dragFree: true,
+    containScroll: "trimSnaps",
+  });
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(true);
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+  }, [emblaApi, onSelect]);
+
+  const topCars = TopRated || [];
 
   return (
-    <section
-      ref={ref}
-      className="mt-24 bg-gradient-to-b from-slate-50 via-white to-slate-50 px-4 py-12 text-slate-800"
-    >
-      <div className="mx-auto max-w-6xl space-y-8">
-        <div
-          className={`flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between transition-all duration-700 ${
-            isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
+    <section id="highlights" className="py-24 sm:py-32 bg-[#05070c] border-t border-white/[0.08]">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-12">
+        {/* Editorial Section Header */}
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h3 className="mt-3 text-3xl font-bold md:text-4xl text-slate-900">
-              Top cars rented this month
-            </h3>
-            <p className="mt-2 max-w-2xl text-sm text-slate-500 md:text-base">
-              Curated from thousands of successful trips. These trims balance
-              comfort, performance, and concierge scores. Swipe on mobile—line
-              up horizontally on desktop—for an instant shortlist.
+            <div className="text-[11px] font-medium tracking-[0.22em] text-amber-500 uppercase mb-5">
+              Monthly Highlights
+            </div>
+            <h2 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl lg:text-6xl font-normal text-[#f5f3ee] tracking-[-0.03em] leading-[1.02]">
+              Top rented this month.
+            </h2>
+            <p className="mt-6 text-base text-slate-300 max-w-lg font-light leading-7">
+              Our most requested vehicles, ready for your next journey.
             </p>
           </div>
-          <div
-            className={`flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-indigo-500 ${
-              isInView ? "stagger-children" : "opacity-0"
-            }`}
-          >
-            {badges.map((badge) => (
-              <span
-                key={badge}
-                className="rounded-full border border-slate-200 px-4 py-2 bg-white"
-              >
-                {badge}
-              </span>
-            ))}
+
+          {/* Carousel Navigation Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={scrollPrev}
+              disabled={!canScrollPrev}
+              aria-label="Previous highlight vehicle"
+              className="inline-flex h-10 w-10 items-center justify-center border border-white/[0.14] text-slate-300 transition-colors hover:border-amber-500 hover:text-amber-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={scrollNext}
+              disabled={!canScrollNext}
+              aria-label="Next highlight vehicle"
+              className="inline-flex h-10 w-10 items-center justify-center border border-white/[0.14] text-slate-300 transition-colors hover:border-amber-500 hover:text-amber-500 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        <div
-          className={`rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-200/50 hover-glow transition-all duration-700 delay-100 ${
-            isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          <div ref={emblaRef} className="overflow-hidden py-4">
-            <div
-              className={`flex gap-6 [will-change:transform] ${
-                isDragging ? "cursor-grabbing select-none" : "cursor-grab"
-              }`}
-            >
-              {TopRated.map((data, id) => (
-                <div
-                  key={data?.id ?? id}
-                  className="w-72 flex-shrink-0 lg:w-full lg:flex-1 lg:basis-0"
-                >
-                  <HighligthData data={data} />
-                </div>
-              ))}
-            </div>
+        {/* Vehicle Carousel */}
+        <div className="mt-12 overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-6 sm:gap-7 lg:gap-8 pb-2 cursor-grab active:cursor-grabbing">
+            {topCars.map((data, id) => (
+              <div
+                key={`${data?.name ?? "top"}-${id}`}
+                className="w-[300px] sm:w-[340px] lg:w-[360px] flex-shrink-0"
+              >
+                <HighligthData data={data} />
+              </div>
+            ))}
           </div>
         </div>
       </div>
     </section>
   );
 };
+
+// Also export as Highlights for flexibility
+export const Highlights = Highligth;
+export default Highligth;

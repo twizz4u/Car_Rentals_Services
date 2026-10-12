@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import console from "node:console";
 
 export default function CarFormModal({ open, onClose, onSave, car }) {
   const { token } = useAuth();
@@ -86,11 +85,11 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
         formData.append("car_image", form.car_image);
       }
 
-      let url = "http://127.0.0.1:8000/api/addCar";
+      let url = "http://127.0.0.1:8000/api/cars";
       let reqMethod = "POST";
 
       if (car) {
-        url = `http://127.0.0.1:8000/api/editCar/${car.id}`;
+        url = `http://127.0.0.1:8000/api/cars/${car.id}`;
         // Since we are sending FormData (multipart/form-data) via PHP/Laravel,
         // we send a POST request but specify the _method field as PATCH.
         formData.append("_method", "PATCH");
@@ -113,10 +112,19 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
         onSave(data.data || form);
         onClose();
       } else {
-        const errorMsg = data.message || (car ? "Failed to update car" : "Failed to add car");
-        toast.error(errorMsg);
-        if (data.errors) {
-          Object.values(data.errors).forEach((err) => toast.error(err[0]));
+        // Backend shapes: { message: ... } for most errors, and
+        // { status: 'failed', messages: ..., response: { field: [error] } } for
+        // car validation failures.
+        const fieldErrors = Object.values(data.response || data.errors || {}).flat();
+
+        if (fieldErrors.length) {
+          fieldErrors.forEach((err) => toast.error(err));
+        } else {
+          toast.error(
+            data.message ||
+              data.messages ||
+              (car ? "Failed to update car" : "Failed to add car"),
+          );
         }
       }
     } catch (error) {

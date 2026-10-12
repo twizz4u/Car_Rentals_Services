@@ -5,7 +5,6 @@ import { useState } from "react";
 const CustomerAuthForm = ({ isLogin, setIsLogin }) => {
 
   const [regValue, setRegValue] = useState({})
-  const [submit, setSubmit] = useState(false)
 
 
   // console.log(regValue);

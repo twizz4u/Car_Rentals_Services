@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/component/Sidebar";
 import TopNav from "@/component/TopNav";
 import OrdersTable from "@/component/OrdersTable";
@@ -14,12 +14,7 @@ export const Orders = () => {
   const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0 });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchOrders();
-    fetchStats();
-  }, [token]);
-
-  function fetchOrders() {
+  const fetchOrders = useCallback(() => {
     setLoading(true);
     fetch("http://127.0.0.1:8000/api/rentalOrders", {
       headers: {
@@ -43,11 +38,11 @@ export const Orders = () => {
         setOrders([]);
       })
       .finally(() => setLoading(false));
-  }
+  }, [token]);
 
-  function fetchStats() {
+  const fetchStats = useCallback(() => {
     setStatsLoading(true);
-    fetch("http://127.0.0.1:8000/api/rentalOrderStats", {
+    fetch("http://127.0.0.1:8000/api/rentalOrders/stats", {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -67,13 +62,13 @@ export const Orders = () => {
       .catch((err) => {
         console.error("Failed to fetch order stats:", err);
       })
-      .finally(() => setStatsLoading(true)); // Assuming typo in original file where it was set to false then true? Wait, it should be false.
-  }
+      .finally(() => setStatsLoading(false));
+  }, [token]);
 
-  // Fixing the finally block for stats loading
   useEffect(() => {
-    if (statsLoading === true && stats.total !== 0) setStatsLoading(false);
-  }, [stats]);
+    fetchOrders();
+    fetchStats();
+  }, [fetchOrders, fetchStats]);
 
   return (
     <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-gray-50">

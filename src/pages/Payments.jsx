@@ -16,7 +16,7 @@ import {
   Area,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
 
 const revenueData = [
@@ -63,14 +63,17 @@ export const ClaimsPayments = () => {
     const fetchStats = async () => {
       try {
         setIsLoadingStats(true);
-        const response = await fetch("http://127.0.0.1:8000/api/payments/stats", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/payments/stats",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            signal,
           },
-          signal,
-        });
+        );
         if (!response.ok) throw new Error("Failed to fetch payment stats");
         const result = await response.json();
         setStats({
@@ -129,15 +132,6 @@ export const ClaimsPayments = () => {
         />
 
         <section className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white/50 p-4 rounded-xl border border-slate-100 backdrop-blur-sm px-4 md:px-0">
-            <div>
-              <h2 className="text-lg md:text-xl font-bold text-slate-800">Financial Overview</h2>
-              <p className="text-xs md:text-sm text-slate-500">
-                Track your monthly revenue targets and channel breakdowns.
-              </p>
-            </div>
-          </div>
-
           {/* Premium Stat Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {isLoadingStats ? (
@@ -158,19 +152,32 @@ export const ClaimsPayments = () => {
 
                 {/* Skeleton for secondary cards */}
                 {[
-                  { accent: "bg-amber-100", bar: "from-amber-400 to-amber-200" },
-                  { accent: "bg-emerald-100", bar: "from-emerald-400 to-emerald-200" },
+                  {
+                    accent: "bg-amber-100",
+                    bar: "from-amber-400 to-amber-200",
+                  },
+                  {
+                    accent: "bg-emerald-100",
+                    bar: "from-emerald-400 to-emerald-200",
+                  },
                 ].map((card, i) => (
-                  <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                  <div
+                    key={i}
+                    className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden"
+                  >
                     <div className="flex justify-between items-start mb-4">
-                      <div className={`w-11 h-11 ${card.accent} rounded-xl animate-pulse`} />
+                      <div
+                        className={`w-11 h-11 ${card.accent} rounded-xl animate-pulse`}
+                      />
                       <div className="w-20 h-7 bg-slate-100 rounded-full animate-pulse" />
                     </div>
                     <div className="space-y-2">
                       <div className="h-4 w-36 bg-slate-200 rounded-full animate-pulse" />
                       <div className="h-8 w-24 bg-slate-200 rounded-lg animate-pulse" />
                     </div>
-                    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${card.bar} opacity-50`}></div>
+                    <div
+                      className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${card.bar} opacity-50`}
+                    ></div>
                   </div>
                 ))}
               </>
@@ -245,7 +252,9 @@ export const ClaimsPayments = () => {
                   <h3 className="text-lg font-bold text-slate-800">
                     Revenue Trend
                   </h3>
-                  <p className="text-sm text-slate-500">Daily collections compared to previous week</p>
+                  <p className="text-sm text-slate-500">
+                    Daily collections compared to previous week
+                  </p>
                 </div>
                 <div className="flex items-center space-x-4 text-sm font-medium">
                   <div className="flex items-center text-slate-700">
@@ -260,32 +269,96 @@ export const ClaimsPayments = () => {
               </div>
               <div className="h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart
+                    data={revenueData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
                     <defs>
-                      <linearGradient id="colorCurrent" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      <linearGradient
+                        id="colorCurrent"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#6366f1"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#6366f1"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
-                      <linearGradient id="colorPrevious" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#cbd5e1" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#cbd5e1" stopOpacity={0} />
+                      <linearGradient
+                        id="colorPrevious"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#cbd5e1"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#cbd5e1"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#f1f5f9"
+                    />
+                    <XAxis
+                      dataKey="day"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      dy={10}
+                    />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       tickFormatter={(value) => `₦${value / 1000}k`}
                       dx={-10}
                     />
                     <Tooltip
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                      formatter={(value, name) => [`₦${value.toLocaleString()}`, name === 'current' ? 'This Week' : 'Last Week']}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                        padding: "12px",
+                      }}
+                      formatter={(value, name) => [
+                        `₦${value.toLocaleString()}`,
+                        name === "current" ? "This Week" : "Last Week",
+                      ]}
                     />
-                    <Area type="monotone" dataKey="previous" stroke="#cbd5e1" strokeWidth={2} fillOpacity={1} fill="url(#colorPrevious)" />
-                    <Area type="monotone" dataKey="current" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorCurrent)" activeDot={{ r: 6, strokeWidth: 0, fill: '#4f46e5' }} />
+                    <Area
+                      type="monotone"
+                      dataKey="previous"
+                      stroke="#cbd5e1"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorPrevious)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="current"
+                      stroke="#6366f1"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorCurrent)"
+                      activeDot={{ r: 6, strokeWidth: 0, fill: "#4f46e5" }}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -297,7 +370,9 @@ export const ClaimsPayments = () => {
                 <h3 className="text-lg font-bold text-slate-800 mb-1">
                   Channel Performance
                 </h3>
-                <p className="text-sm text-slate-500 mb-2">Breakdown of payment channels</p>
+                <p className="text-sm text-slate-500 mb-2">
+                  Breakdown of payment channels
+                </p>
               </div>
 
               <div className="flex-1 min-h-[220px] relative -mt-2">
@@ -320,23 +395,37 @@ export const ClaimsPayments = () => {
                     </Pie>
                     <Tooltip
                       formatter={(value) => `₦${value.toLocaleString()}`}
-                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
                 {/* Inner text for donut hole */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
-                  <span className="text-xs text-slate-400 font-medium">Total Vol</span>
-                  <span className="text-sm font-bold text-slate-700">6.95m</span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    Total Vol
+                  </span>
+                  <span className="text-sm font-bold text-slate-700">
+                    6.95m
+                  </span>
                 </div>
               </div>
 
               {/* Custom Colored Legend */}
               <div className="mt-4 grid grid-cols-1 gap-y-3">
                 {paymentMethodsData.map((method, idx) => (
-                  <div key={idx} className="flex justify-between items-center text-sm px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors">
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center text-sm px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
                     <div className="flex items-center text-slate-600 font-medium">
-                      <span className="w-3 h-3 rounded-full mr-3 shadow-sm" style={{ backgroundColor: method.color }}></span>
+                      <span
+                        className="w-3 h-3 rounded-full mr-3 shadow-sm"
+                        style={{ backgroundColor: method.color }}
+                      ></span>
                       {method.name}
                     </div>
                     <span className="font-bold text-slate-800">
@@ -356,4 +445,3 @@ export const ClaimsPayments = () => {
     </div>
   );
 };
-

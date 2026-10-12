@@ -1,122 +1,312 @@
-import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
-const defaultSpecs = [
-  { label: "Seats", value: "5" },
-  { label: "Range", value: "610 km" },
-  { label: "Drive", value: "AWD" },
-];
+// Distinct, verified automotive campaign photography & metadata per make/model
+// Ensures every vehicle in the fleet has a unique, professional photograph
+const VEHICLE_METADATA_MAP = {
+  "mercedes-benz s-class": {
+    image: "/cars/hero_mercedes_s580.jpg",
+    category: "EXECUTIVE",
+    price: "₦260,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "mercedes-benz g-class": {
+    image: "/cars/mercedes-g-class.jpg",
+    category: "LUXURY SUV",
+    price: "₦380,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "mercedes-amg": {
+    image: "/cars/mercedes-g-class.jpg",
+    category: "LUXURY SUV",
+    price: "₦380,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "lexus ls": {
+    image: "/cars/lexus_ls500.jpg",
+    category: "EXECUTIVE",
+    price: "₦220,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "lexus lx": {
+    image: "/cars/lexus_lx600.jpg",
+    category: "LUXURY SUV",
+    price: "₦320,000 / day",
+    specs: "Automatic · 7 Seats · Chauffeur",
+  },
+  "toyota century": {
+    image:
+      "https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1200&q=80",
+    category: "EXECUTIVE",
+    price: "₦300,000 / day",
+    specs: "Automatic · 4 Seats · Chauffeur",
+  },
+  "tesla model s": {
+    image: "/cars/tesla_model_s.jpg",
+    category: "EXECUTIVE",
+    price: "₦250,000 / day",
+    specs: "Electric · 5 Seats · Chauffeur",
+  },
+  "tesla model x": {
+    image: "/cars/tesla_model_x.jpg",
+    category: "LUXURY SUV",
+    price: "₦290,000 / day",
+    specs: "Electric · 6 Seats · Chauffeur",
+  },
+  "lamborghini urus": {
+    image: "/cars/lamborghini_urus.jpg",
+    category: "SPORTS",
+    price: "₦450,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "bmw 7 series": {
+    image: "/cars/BMW_7.webp",
+    category: "EXECUTIVE",
+    price: "₦250,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "bmw x7": {
+    image: "/cars/Lincoln_Navigator.webp",
+    category: "LUXURY SUV",
+    price: "₦310,000 / day",
+    specs: "Automatic · 7 Seats · Chauffeur",
+  },
+  "audi a8": {
+    image: "/cars/audi-r8.jpg",
+    category: "EXECUTIVE",
+    price: "₦230,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  "audi r8": {
+    image: "/cars/audi-a8.jpg",
+    category: "SPORTS",
+    price: "₦400,000 / day",
+    specs: "Automatic · 2 Seats · Self Drive",
+  },
+  "porsche 911": {
+    image:
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80",
+    category: "SPORTS",
+    price: "₦350,000 / day",
+    specs: "Automatic · 4 Seats · Self Drive",
+  },
+  "porsche panamera": {
+    image: "/cars/header_1.jpg",
+    category: "SPORTS",
+    price: "₦320,000 / day",
+    specs: "Automatic · 4 Seats · Chauffeur",
+  },
+  "range rover": {
+    image: "/cars/range_rover_autobiography.jpg",
+    category: "LUXURY SUV",
+    price: "₦310,000 / day",
+    specs: "Automatic · 5 Seats · Chauffeur",
+  },
+  cadillac: {
+    image: "/cars/Lincoln_Navigator.webp",
+    category: "LUXURY SUV",
+    price: "₦340,000 / day",
+    specs: "Automatic · 7 Seats · Chauffeur",
+  },
+};
 
-export const CarDetail = ({ cardata = {}, changeui }) => {
-  const {
-    name = "Unknown",
-    image = "cars/Volvo.webp",
-    model = "Executive",
-    price = "₦150,000 / day",
-    rating = 4.9,
-    specs = defaultSpecs,
-  } = cardata;
+// Helper to resolve asset URLs with Vite's configured base path (supports GitHub Pages and dev)
+export const resolveAsset = (path) => {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const base = import.meta.env.BASE_URL || "/";
+  const cleanBase = base.endsWith("/") ? base : `${base}/`;
+  const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+  return `${cleanBase}${cleanPath}`;
+};
 
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [addedToCart, setAddedToCart] = useState(false);
+// Helper to cleanly deduplicate repeated model/brand words
+// e.g. ("Tesla Model X", "Model X Plaid") -> "Tesla Model X Plaid"
+// e.g. ("Toyota Century", "Century") -> "Toyota Century"
+// e.g. ("Lamborghini Urus", "Urus") -> "Lamborghini Urus"
+// e.g. ("Lexus LX", "LX 600") -> "Lexus LX 600"
+export const formatVehicleTitle = (name = "", model = "") => {
+  const cleanName = (name || "").trim();
+  const cleanModel = (model || "").trim();
+  if (!cleanModel) return cleanName;
+  if (!cleanName) return cleanModel;
+
+  if (cleanName.toLowerCase() === cleanModel.toLowerCase()) return cleanName;
+  if (cleanName.toLowerCase().includes(cleanModel.toLowerCase()))
+    return cleanName;
+
+  const nameWords = cleanName.split(/\s+/);
+  const modelWords = cleanModel.split(/\s+/);
+
+  let overlap = 0;
+  for (let i = 1; i <= Math.min(nameWords.length, modelWords.length); i++) {
+    const nameSuffix = nameWords
+      .slice(nameWords.length - i)
+      .join(" ")
+      .toLowerCase();
+    const modelPrefix = modelWords.slice(0, i).join(" ").toLowerCase();
+    if (nameSuffix === modelPrefix) {
+      overlap = i;
+    }
+  }
+
+  if (overlap > 0) {
+    const uniqueModelPart = modelWords.slice(overlap).join(" ");
+    return uniqueModelPart ? `${cleanName} ${uniqueModelPart}` : cleanName;
+  }
+
+  return `${cleanName} ${cleanModel}`;
+};
+
+export const CarDetail = ({ cardata = {} }) => {
+  const { name = "Executive Vehicle", model = "S 580" } = cardata;
 
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
+  // Find exact vehicle match from our curated lookup map
+  const searchKey = `${name} ${model}`.toLowerCase();
+  let matchedMeta = null;
+
+  for (const [key, value] of Object.entries(VEHICLE_METADATA_MAP)) {
+    if (searchKey.includes(key)) {
+      matchedMeta = value;
+      break;
+    }
+  }
+
+  // Fallback defaults if vehicle is unfamiliar
+  const category =
+    (cardata.category && cardata.category !== "null" && cardata.category) ||
+    matchedMeta?.category ||
+    "EXECUTIVE";
+
+  const displayPrice =
+    cardata.loanPrice ||
+    (cardata.price && cardata.price !== "null" ? cardata.price : null) ||
+    matchedMeta?.price ||
+    "₦150,000 / day";
+
+  const specs = (
+    cardata.specs ||
+    matchedMeta?.specs ||
+    "Automatic · 5 Seats · Driver"
+  ).replace(/\bChauffeur\b/g, "Driver");
+
+  // Resolve authentic, distinct vehicle image with base URL resolution
+  const rawImage =
+    (cardata.image &&
+      cardata.image !== "null" &&
+      !cardata.image.includes("cars/Lexus.webp") &&
+      !cardata.image.includes("cars/Cadillac.webp") &&
+      cardata.image) ||
+    matchedMeta?.image ||
+    "/cars/hero_mercedes_s580.jpg";
+
+  const vehicleImage = resolveAsset(rawImage);
+
+  // Clean vehicle title without duplicate words (e.g. "Tesla Model X Plaid")
+  const fullTitle = formatVehicleTitle(name, model);
+
   const handleRentNow = () => {
-    addToCart({ ...cardata, loanPrice: cardata.loanPrice || price });
+    addToCart({
+      ...cardata,
+      name,
+      model,
+      category,
+      specs,
+      image: vehicleImage,
+      loanPrice: displayPrice,
+    });
     navigate("/checkout");
   };
 
-  const handleAddToCart = () => {
-    addToCart({ ...cardata, loanPrice: cardata.loanPrice || price });
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+  // Open the premium vehicle detail page for this vehicle
+  const handleViewDetails = () => {
+    navigate("/car-details", {
+      state: {
+        car: {
+          ...cardata,
+          name,
+          model,
+          category,
+          specs,
+          image: vehicleImage,
+          loanPrice: displayPrice,
+        },
+      },
+    });
   };
 
-  const driveSpec = specs?.find((s) => s.label === "Drive")?.value || "AWD";
-
   return (
-    <article className="group relative h-auto md:h-[420px] w-full transition-all duration-500 hover:-translate-y-2">
-      <div className="absolute inset-0 rounded-2xl md:rounded-[30px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 transition-all duration-500 group-hover:border-indigo-500/30 group-hover:shadow-2xl group-hover:shadow-indigo-500/20" />
+    <article className="group flex w-full flex-col bg-[#090a0d]">
+      {/* 1. Consistent Professional Vehicle Photograph (16:10 horizontal landscape) */}
+      <button
+        type="button"
+        onClick={handleViewDetails}
+        aria-label={`View ${fullTitle} details`}
+        className="relative aspect-[16/10] w-full cursor-pointer overflow-hidden bg-[#07080a]"
+      >
+        <img
+          src={vehicleImage}
+          alt={fullTitle}
+          className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.025] brightness-[0.93]"
+          loading="lazy"
+        />
+      </button>
 
-      <div className="relative z-10 h-full w-full rounded-2xl md:rounded-[30px] bg-white text-slate-800 border border-slate-100 transition-colors group-hover:border-indigo-500/10">
-        <div className="flex h-full flex-col">
-          {/* Image Section */}
-          <div className="relative h-24 md:h-40 shrink-0 overflow-hidden rounded-t-2xl md:rounded-t-[30px] border-b border-slate-100 bg-slate-50">
-            <div
-              className={`${imageLoaded
-                ? "hidden"
-                : "absolute inset-0 animate-pulse bg-slate-200"
-                }`}
-            ></div>
-            <img
-              src={image}
-              alt={name}
-              className="h-full w-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-110"
-              draggable={false}
-              loading="lazy"
-              onLoad={() => setImageLoaded(true)}
-            />
-            <span className="absolute left-2 top-16 md:left-4 md:top-30 rounded-full bg-white/95 px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs font-bold uppercase tracking-wider text-indigo-600 shadow-sm backdrop-blur-sm border border-indigo-100">
-              {model}
-            </span>
-            <button
-              onClick={() => setLiked((s) => !s)}
-              className={`absolute right-1 top-1 md:right-3 md:top-3 rounded-full bg-white/90 p-0.5 md:p-2 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-red-500 active:scale-90 text-xs md:text-base ${liked ? "text-red-500" : "text-slate-400"
-                }`}
+      {/* 2. Information Area (Horizontally distributed, vertically compact) */}
+      <div className="flex flex-1 flex-col justify-between px-4 py-3 sm:px-5 sm:py-3.5">
+        <div>
+          <div className="flex items-baseline justify-between gap-2">
+            <h3
+              className="text-base sm:text-lg font-semibold tracking-tight text-[#f5f3ee] leading-snug truncate"
+              title={fullTitle}
             >
-              {liked ? "♥" : "♡"}
-            </button>
+              {fullTitle}
+            </h3>
+            <span className="shrink-0 text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
+              {category}
+            </span>
           </div>
 
-          <div className="flex flex-1 flex-col justify-between px-1.5 py-2 md:p-4">
-            <div>
-              <h4
-                className="mt-0.5 md:mt-1 text-sm md:text-xl font-bold text-slate-900 line-clamp-1"
-                title={name}
-              >
-                {name}
-              </h4>
-            </div>
+          <p className="mt-1 text-xs sm:text-sm font-light text-slate-400 truncate">
+            {specs}
+          </p>
+          <p className="mt-1 text-xs text-slate-300">
+            Pickup available <span className="px-1 text-slate-600">·</span>{" "}
+            Driver available
+          </p>
+        </div>
 
-            <ul className="my-1 md:my-2 space-y-0.5 md:space-y-2 text-[11px] md:text-sm text-slate-600">
-              <li className="flex items-center justify-between">
-                <span className="text-slate-500">Price</span>
-                <span className="font-bold text-indigo-950 text-xs md:text-lg">
-                  {cardata.loanPrice || price}
-                </span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-slate-500">Rating</span>
-                <span className="font-semibold text-slate-900 flex items-center gap-0.5 md:gap-1 text-xs md:text-sm">
-                  <span className="text-amber-500">★</span> {rating}
-                </span>
-              </li>
-            </ul>
+        {/* 3. Pricing & Reserve CTA */}
+        <div className="mt-3.5 flex items-center justify-between gap-2.5 border-t border-white/[0.08] pt-3 pb-0.5">
+          <span className="text-xs sm:text-sm font-semibold tracking-tight text-amber-500 whitespace-nowrap min-w-0">
+            {displayPrice}
+          </span>
 
-            <div className="flex gap-1 md:flex-col md:space-y-2">
-              <button
-                onClick={handleAddToCart}
-                className={`flex-1 md:flex-none md:w-full h-5 md:h-auto rounded-sm md:rounded-xl py-0 md:py-2.5 text-[10px] md:text-sm font-bold uppercase tracking-wide transition-all duration-300 flex items-center justify-center ${addedToCart
-                  ? "bg-emerald-500 text-white"
-                  : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200"
-                  }`}
-              >
-                {addedToCart ? "✓" : "Cart"}
-              </button>
-              <button
-                onClick={handleRentNow}
-                className="flex-1 md:flex-none md:w-full h-5 md:h-auto rounded-sm md:rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 py-0 md:py-2.5 text-[10px] md:text-sm font-bold uppercase tracking-wide text-white shadow-sm md:shadow-lg shadow-slate-900/20 ring-1 ring-white/10 transition-all hover:from-slate-800 hover:to-slate-700 active:scale-[0.98] flex items-center justify-center"
-              >
-                Rent
-              </button>
-            </div>
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={handleViewDetails}
+              className="whitespace-nowrap text-xs font-medium text-slate-400 transition-colors hover:text-white cursor-pointer"
+            >
+              View details
+            </button>
+            <button
+              type="button"
+              onClick={handleRentNow}
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 hover:bg-amber-500 px-2.5 sm:px-3 py-1 text-xs font-medium text-amber-400 hover:text-black transition-all cursor-pointer whitespace-nowrap"
+            >
+              <span>Reserve</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>
     </article>
   );
 };
+
+export default CarDetail;

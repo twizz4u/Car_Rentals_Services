@@ -161,7 +161,7 @@ export default function OrdersTable({ orders = [], loading = false }) {
     },
     {
       id: "actions",
-      cell: ({ row }) => {
+      cell: () => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
