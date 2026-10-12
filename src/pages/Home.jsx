@@ -115,38 +115,36 @@ export const Home = () => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage,
   );
-  const scrollToFleet = () => {
+
+  // Reposition to the fleet top synchronously BEFORE the grid re-renders.
+  // An instant jump avoids painting the shorter next page at the old scroll
+  // position (which flashes the section below) and avoids animating through
+  // content. The fleet header sits above the grid, so its position is stable.
+  const snapToFleetTop = () => {
     const fleetSection = document.getElementById("fleet");
     if (fleetSection) {
-      const headerOffset = 90;
-      const elementPosition = fleetSection.getBoundingClientRect().top;
-      const offsetPosition =
-        elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
+      fleetSection.scrollIntoView({ behavior: "auto", block: "start" });
     }
   };
 
   const nextPage = () => {
     if (currentPage < totalPages) {
+      snapToFleetTop();
       setCurrentPage((page) => page + 1);
-      scrollToFleet();
     }
   };
 
   const prevPage = () => {
     if (currentPage > 1) {
+      snapToFleetTop();
       setCurrentPage((page) => page - 1);
-      scrollToFleet();
     }
   };
 
   const goToPage = (pageNumber) => {
     if (pageNumber !== currentPage) {
+      snapToFleetTop();
       setCurrentPage(pageNumber);
-      scrollToFleet();
     }
   };
 
@@ -174,7 +172,7 @@ export const Home = () => {
           {/* Section: The Fleet Showroom (Base #000000) */}
           <section
             id="fleet"
-            className="pt-20 sm:pt-24 pb-28 sm:pb-36 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto"
+            className="pt-20 sm:pt-24 pb-28 sm:pb-36 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto scroll-mt-24"
           >
             {/* Editorial Section Header */}
             <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -215,6 +213,7 @@ export const Home = () => {
                     <button
                       key={cat.id}
                       onClick={() => {
+                        snapToFleetTop();
                         setActiveCategory(cat.id);
                         setCurrentPage(1);
                       }}
