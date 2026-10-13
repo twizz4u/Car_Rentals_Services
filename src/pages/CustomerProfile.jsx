@@ -468,6 +468,7 @@ export function CustomerProfile() {
   const [historyFilter, setHistoryFilter] = useState("all");
   const [historyVisible, setHistoryVisible] = useState(HISTORY_PAGE_SIZE);
   const [selectedId, setSelectedId] = useState(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   // Profile state (real account data only)
   const [profile, setProfile] = useState(null);
@@ -787,7 +788,34 @@ export function CustomerProfile() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+
+    // Revoke the token server-side so the session actually ends in the
+    // backend, not just in this browser. Guarded by a timeout and a catch so
+    // a slow or unreachable API can never trap the user on this screen —
+    // the local session is cleared either way.
+    if (token) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      try {
+        await fetch(`${API_BASE}/api/customer/logout`, {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+      } catch {
+        // Offline or timed out — still sign out locally below.
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
     logout();
     navigate("/", { replace: true });
   };
@@ -841,10 +869,15 @@ export function CustomerProfile() {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-sm font-light text-slate-400 transition-colors hover:bg-white/[0.04] hover:text-white"
+          disabled={loggingOut}
+          className="flex w-full items-center gap-3 rounded-[3px] px-3 py-2.5 text-sm font-light text-slate-400 transition-colors hover:bg-white/[0.04] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <LogOut className="h-4 w-4" />
-          <span>Log Out</span>
+          {loggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
+          <span>{loggingOut ? "Signing out…" : "Log Out"}</span>
         </button>
         <p className="px-3 pb-2 pt-3 text-[11px] font-light leading-relaxed text-slate-600">
           Support
