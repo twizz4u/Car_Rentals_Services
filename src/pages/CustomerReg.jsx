@@ -5,18 +5,8 @@ import {
   EyeOff,
   ArrowLeft,
   ArrowRight,
-  Lock,
-  Mail,
-  User,
-  ShieldCheck,
   Car,
-  KeyRound,
   AlertCircle,
-  Clock,
-  Sparkles,
-  Phone,
-  Compass,
-  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
@@ -67,22 +57,6 @@ export const CustomerReg = () => {
   const switchMode = (mode) => {
     setIsLogin(mode);
     setFormError("");
-  };
-
-  // Quick 1-click test prefill
-  const handlePrefillDemo = () => {
-    if (isLogin) {
-      setLoginEmail("driver.demo@tasinmobility.com");
-      setLoginPassword("TasinDrive2026!");
-      toast.success("Demo credentials loaded. Click 'Enter Driver Console'.");
-    } else {
-      setRegFullName("Alexander Cole");
-      setRegEmail("alex.cole@example.com");
-      setRegPassword("TasinDrive2026!");
-      setRegConfirmPassword("TasinDrive2026!");
-      setAgreeTerms(true);
-      toast.success("Driver application details filled.");
-    }
   };
 
   // Handle Login
@@ -246,29 +220,14 @@ export const CustomerReg = () => {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 flex items-center justify-center text-slate-950 font-bold shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform">
                 <Car className="w-5 h-5 text-slate-950 stroke-[2.2]" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-['Syne',sans-serif] font-bold text-sm tracking-[0.2em] text-white uppercase">
-                  Tasin Mobility
-                </span>
-                <span className="text-[10px] tracking-wider text-slate-400 uppercase">
-                  Fleet & Private Hire
-                </span>
-              </div>
+              <span className="font-['Syne',sans-serif] font-bold text-sm tracking-[0.2em] text-white uppercase">
+                Tasin Mobility
+              </span>
             </Link>
-
-            {/* Live Location / Availability Indicator */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] backdrop-blur-md border border-white/10 text-[11px] text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Lagos Hub • 18 Vehicles Ready for Dispatch</span>
-            </div>
           </div>
 
           {/* Center-Bottom Dramatic Narrative */}
           <div className="relative z-10 max-w-xl pb-6">
-            <div className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] text-amber-400/90 uppercase mb-4">
-              <span>01 / THE DRIVER EXPERIENCE</span>
-            </div>
-
             <h1 className="font-['Syne',sans-serif] text-4xl xl:text-5xl font-extrabold text-white leading-[1.08] tracking-tight">
               The open road,{" "}
               <span className="font-['Instrument_Serif',serif] italic font-normal text-amber-300 tracking-normal block text-4xl xl:text-[3.25rem] mt-1">
@@ -281,43 +240,6 @@ export const CustomerReg = () => {
               of executive sedans, grand SUVs, and performance vehicles with
               direct keyless bay access and curbside drop-off.
             </p>
-
-            {/* Editorial Feature Specs */}
-            <div className="mt-8 grid grid-cols-3 gap-6 pt-6 border-t border-white/10">
-              <div>
-                <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
-                  01. HANDOVER
-                </p>
-                <p className="text-xs text-slate-300 font-medium mt-1">
-                  Instant Bay Pickup
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Walk straight to your reserved vehicle.
-                </p>
-              </div>
-              <div>
-                <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
-                  02. PROTECTION
-                </p>
-                <p className="text-xs text-slate-300 font-medium mt-1">
-                  Full Collision Tier
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Zero deductible deposit options.
-                </p>
-              </div>
-              <div>
-                <p className="font-mono text-xs text-amber-400 font-semibold tracking-wider">
-                  03. FLEXIBILITY
-                </p>
-                <p className="text-xs text-slate-300 font-medium mt-1">
-                  Free Adjustments
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Reschedule up to 24h prior.
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Bottom Link on Left Column */}
@@ -329,13 +251,6 @@ export const CustomerReg = () => {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span>Explore Fleet Catalog</span>
             </Link>
-            <div className="flex items-center gap-4 text-slate-400 text-[11px]">
-              <span>Victoria Island</span>
-              <span>•</span>
-              <span>Ikeja Airport</span>
-              <span>•</span>
-              <span>Abuja Central</span>
-            </div>
           </div>
         </section>
 
@@ -345,42 +260,14 @@ export const CustomerReg = () => {
           <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/[0.04] rounded-full blur-[100px] pointer-events-none" />
 
           {/* Top Console Bar */}
-          <header className="px-6 sm:px-10 pt-7 pb-4 flex items-center justify-between border-b border-white/[0.06]">
-            {/* Mobile Brand Link (visible only on small screens) */}
-            <Link to="/" className="lg:hidden flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-slate-950 font-bold">
-                <Car className="w-4 h-4 text-slate-950" />
-              </div>
-              <span className="font-['Syne'] font-bold text-sm tracking-wider uppercase text-white">
-                Tasin
-              </span>
+          <header className="px-6 sm:px-10 pt-7 pb-4 flex items-center justify-end border-b border-white/[0.06]">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to cars</span>
             </Link>
-
-            {/* Left label on desktop */}
-            <span className="hidden lg:inline-block font-mono text-[11px] tracking-[0.2em] text-slate-400 uppercase">
-              PORTAL CONSOLE
-            </span>
-
-            {/* Quick prefill helper */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handlePrefillDemo}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-amber-500/10 border border-white/10 hover:border-amber-400/40 text-[11px] font-medium text-slate-300 hover:text-amber-300 transition-all cursor-pointer"
-                title="Prefill sample login to test immediately"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                <span>Quick Test Fill</span>
-              </button>
-
-              <Link
-                to="/"
-                className="lg:hidden inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Cars</span>
-              </Link>
-            </div>
           </header>
 
           {/* Main Form Body */}
@@ -723,19 +610,6 @@ export const CustomerReg = () => {
                 </button>
               </form>
             )}
-
-            {/* Bottom Service Micro-Notes */}
-            <div className="mt-8 pt-5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                Verified bay handover
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-amber-400" />
-                24h flexible adjustment
-              </span>
-            </div>
           </div>
 
           {/* Footer of the Console */}

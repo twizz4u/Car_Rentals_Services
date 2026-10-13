@@ -1,13 +1,53 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { Car, Menu, X } from "lucide-react";
+
+// Section anchors on the Home page. Each label mirrors the heading of the
+// section it targets, and every entry has a unique destination.
+const NAV_LINKS = [
+  { id: "fleet", label: "Fleet" },
+  { id: "standards", label: "Service" },
+  { id: "locations", label: "Locations" },
+  { id: "about", label: "About" },
+  { id: "reviews", label: "Reviews" },
+];
 
 export const Header = () => {
   const [open, setOpen] = useState(false);
   const { totalItems, toggleCart } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Section links must work from every page that renders Header. On the Home
+  // page we scroll directly to the section; anywhere else (e.g. /car-details)
+  // we navigate home with the hash and let the effect below scroll once the
+  // section has rendered.
+  const handleNavClick = (id) => {
+    setOpen(false);
+    if (location.pathname === "/") {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.history.replaceState(null, "", `/#${id}`);
+        return;
+      }
+    }
+    navigate({ pathname: "/", hash: `#${id}` });
+  };
+
+  // After navigating from another page, scroll to the section in the hash.
+  useEffect(() => {
+    const id = location.hash.replace("#", "");
+    if (location.pathname !== "/" || !id) return;
+    let raf = requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "auto", block: "start" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [location.pathname, location.hash]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-black/95 text-[#e4e4e7] backdrop-blur-sm font-['Plus_Jakarta_Sans',sans-serif]">
@@ -31,36 +71,16 @@ export const Header = () => {
 
         {/* Desktop Navigation Links — Quiet & Spacious */}
         <nav className="hidden lg:flex items-center gap-9 text-[15px] font-medium">
-          <a
-            href="#fleet"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            Fleet
-          </a>
-          <a
-            href="#fleet"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            Categories
-          </a>
-          <a
-            href="#locations"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            Locations
-          </a>
-          <a
-            href="#standards"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            How It Works
-          </a>
-          <a
-            href="#reviews"
-            className="text-slate-300 hover:text-white transition-colors"
-          >
-            Reviews
-          </a>
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.id}
+              to={`/#${link.id}`}
+              onClick={() => handleNavClick(link.id)}
+              className="text-slate-300 hover:text-white transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         {/* Action Controls */}
@@ -113,49 +133,34 @@ export const Header = () => {
       {/* Mobile Drawer */}
       {open && (
         <div className="lg:hidden border-t border-white/[0.08] bg-[#0c0f17] px-6 py-6 flex flex-col gap-4">
-          <a
-            href="#fleet"
-            onClick={() => setOpen(false)}
-            className="text-base font-medium text-slate-200 hover:text-amber-400 transition-colors py-1"
-          >
-            Fleet
-          </a>
-          <a
-            href="#fleet"
-            onClick={() => setOpen(false)}
-            className="text-base font-medium text-slate-200 hover:text-amber-400 transition-colors py-1"
-          >
-            Categories
-          </a>
-          <a
-            href="#locations"
-            onClick={() => setOpen(false)}
-            className="text-base font-medium text-slate-200 hover:text-amber-400 transition-colors py-1"
-          >
-            Locations
-          </a>
-          <a
-            href="#standards"
-            onClick={() => setOpen(false)}
-            className="text-base font-medium text-slate-200 hover:text-amber-400 transition-colors py-1"
-          >
-            How It Works
-          </a>
-          <a
-            href="#reviews"
-            onClick={() => setOpen(false)}
-            className="text-base font-medium text-slate-200 hover:text-amber-400 transition-colors py-1"
-          >
-            Reviews
-          </a>
-          <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
+          {NAV_LINKS.map((link) => (
             <Link
-              to="/customer-login"
-              onClick={() => setOpen(false)}
-              className="text-sm text-slate-300 hover:text-white"
+              key={link.id}
+              to={`/#${link.id}`}
+              onClick={() => handleNavClick(link.id)}
+              className="text-base font-medium text-slate-200 hover:text-amber-400 transition-colors py-1"
             >
-              Driver Portal
+              {link.label}
             </Link>
+          ))}
+          <div className="pt-4 border-t border-white/[0.06] flex items-center justify-between">
+            {user ? (
+              <Link
+                to="/account"
+                onClick={() => setOpen(false)}
+                className="text-sm text-slate-300 hover:text-white"
+              >
+                Driver Portal
+              </Link>
+            ) : (
+              <Link
+                to="/customer-login"
+                onClick={() => setOpen(false)}
+                className="text-sm text-slate-300 hover:text-white"
+              >
+                Driver Portal
+              </Link>
+            )}
           </div>
         </div>
       )}
