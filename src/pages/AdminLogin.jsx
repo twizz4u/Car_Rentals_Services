@@ -37,7 +37,7 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
+      const response = await fetch("http://127.0.0.1:8000/api/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,14 +48,16 @@ const AdminLogin = () => {
 
       const result = await response.json();
 
-      if (result.status !== "success") {
-        setError(result.message || "Invalid credentials. Please try again.");
+      if (!response.ok || result.status !== "success") {
+        setError(
+          result.message || "Invalid administrator credentials or access revoked.",
+        );
         setIsLoading(false);
         return;
       }
 
-      const { token, email: userEmail, name } = result.data;
-      login(token, { email: userEmail, name });
+      const { token, email: userEmail, name, role } = result.data;
+      login(token, { email: userEmail, name, role });
       toast.success("Access granted. Welcome back.");
       navigate(from, { replace: true });
     } catch {
