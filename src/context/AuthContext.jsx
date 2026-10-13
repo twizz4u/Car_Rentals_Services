@@ -23,16 +23,38 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Re-read the authoritative session state from sessionStorage.
+    const syncFromStorage = () => {
+      const storedToken = sessionStorage.getItem("adminToken");
+      const storedUser = sessionStorage.getItem("adminUser");
+      setToken(storedToken || null);
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
     // Check for existing token and user on mount
-    const storedToken = sessionStorage.getItem("adminToken");
-    const storedUser = sessionStorage.getItem("adminUser");
-    if (storedToken) {
-      setToken(storedToken);
-    }
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    syncFromStorage();
     setIsLoading(false);
+
+    // Mobile browsers restore pages from the back/forward cache (bfcache),
+    // reviving the whole JS heap — including this React state — and skipping
+    // the mount-time read. After a logout that leaves the session cleared in
+    // sessionStorage, back-navigation could therefore still look
+    // authenticated. `pageshow` fires on every restore (and on normal loads),
+    // so we re-sync against the real session so a destroyed session can never
+    // be resurrected.
+    const onPageShow = (event) => {
+      if (event.persisted) syncFromStorage();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
 
   const login = (newToken, userData) => {
