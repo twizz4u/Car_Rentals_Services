@@ -1041,7 +1041,6 @@ function Overview({ rentalsLoading, rentalsError, usingDemo, onRetry, current, u
           <h2 className="font-['Playfair_Display',serif] text-2xl font-normal text-[#f5f3ee]">
             Current rental
           </h2>
-          {current ? <StatusPill status="Active" /> : null}
         </div>
         {rentalsLoading ? (
           <LoadingList />
@@ -1126,10 +1125,10 @@ function Overview({ rentalsLoading, rentalsError, usingDemo, onRetry, current, u
       </section>
 
       {/* Upcoming */}
-      <section className="mt-10" aria-label="Upcoming reservations">
+      <section className="mt-10" aria-label="Reservations">
         <div className="mb-4 flex items-baseline justify-between gap-4">
           <h2 className="font-['Playfair_Display',serif] text-2xl font-normal text-[#f5f3ee]">
-            Upcoming reservations
+            Reservations
           </h2>
           {upcoming.length > 0 ? (
             <button
@@ -1175,7 +1174,6 @@ function Overview({ rentalsLoading, rentalsError, usingDemo, onRetry, current, u
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <StatusPill status={r.status} />
                   <button
                     type="button"
                     onClick={() => onView(r.id)}
