@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Header } from "../component/Header";
-import { Footer } from "../component/Footer";
-import { Cart } from "../component/Cart";
+import { Header } from "../components/shared/Header";
+import { Footer } from "../components/shared/Footer";
+import { Cart } from "../components/shared/Cart";
 import {
   CarDetail,
   formatVehicleTitle,
   resolveAsset,
-} from "../component/CarDetails";
+} from "../components/shared/CarDetails";
 import { useCart } from "../context/CartContext";
 import { useInView } from "../hooks/useInView";
 import { data as localFleet } from "../assets/data";

@@ -1,4 +1,4 @@
-import { CarDetail } from "./CarDetails";
+import { CarDetail } from "../shared/CarDetails";
 
 // Thin proxy so highlight cards are always identical to the showroom card.
 export const HighligthData = ({ data = {} }) => {

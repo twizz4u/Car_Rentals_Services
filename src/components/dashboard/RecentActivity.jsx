@@ -5,7 +5,7 @@ import {
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
-import { recentActivity } from "../assets/data";
+import { recentActivity } from "../../assets/data";
 // import { motion } from "framer-motion";
 
 const iconMap = {

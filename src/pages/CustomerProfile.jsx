@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { resolveAsset } from "../component/CarDetails";
+import { resolveAsset } from "../components/shared/CarDetails";
 import { data as localFleet } from "../assets/data";
 import {
   ArrowLeft,

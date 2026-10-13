@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import Sidebar from "@/component/Sidebar";
-import TopNav from "@/component/TopNav";
+import Sidebar from "@/components/admin/Sidebar";
+import TopNav from "@/components/admin/TopNav";
 import {
   ArrowLeft,
   Printer,

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import Sidebar from "@/component/Sidebar";
-import TopNav from "@/component/TopNav";
-import PaymentsTable from "@/component/PaymentsTable";
+import Sidebar from "@/components/admin/Sidebar";
+import TopNav from "@/components/admin/TopNav";
+import PaymentsTable from "@/components/payments/PaymentsTable";
 import { Link } from "react-router-dom";
 import { Wallet, TrendingUp, Activity } from "lucide-react";
 import { useAuth } from "../context/AuthContext";

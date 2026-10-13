@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { TopRated } from "../assets/data";
+import { TopRated } from "../../assets/data";
 import { HighligthData } from "./Highligthdata";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

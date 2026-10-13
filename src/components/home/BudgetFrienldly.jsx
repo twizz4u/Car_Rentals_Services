@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { BudgetFriendly as BudgetFriendlyData } from "../assets/data";
+import { BudgetFriendly as BudgetFriendlyData } from "../../assets/data";
 import { BudgetDetails } from "./BudgetFriendlydetails";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 

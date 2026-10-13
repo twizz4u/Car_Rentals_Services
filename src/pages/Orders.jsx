@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import Sidebar from "@/component/Sidebar";
-import TopNav from "@/component/TopNav";
-import OrdersTable from "@/component/OrdersTable";
+import Sidebar from "@/components/admin/Sidebar";
+import TopNav from "@/components/admin/TopNav";
+import OrdersTable from "@/components/orders/OrdersTable";
 import { ClipboardList, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";

@@ -29,9 +29,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useCallback } from "react";
 import { carsDashData } from "../assets/data";
-import Sidebar from "@/component/Sidebar";
-import TopNav from "@/component/TopNav";
-import CarFormModal from "@/component/CarFormModel";
+import Sidebar from "@/components/admin/Sidebar";
+import TopNav from "@/components/admin/TopNav";
+import CarFormModal from "@/components/manageCar/carFormModel";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";

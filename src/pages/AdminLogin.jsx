@@ -37,38 +37,64 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/admin/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || result.status !== "success") {
-        setError(
-          result.message || "Invalid administrator credentials or access revoked.",
-        );
-        setIsLoading(false);
+      // 1) Only a genuine network failure unlocks demo mode. Server
+      //    responses never reach this catch, so a real API error can no
+      //    longer masquerade as a successful demo login.
+      let response;
+      try {
+        response = await fetch("http://127.0.0.1:8000/api/admin/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ email: email.trim(), password }),
+        });
+      } catch {
+        const demoToken = `demo_admin_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        login(demoToken, {
+          email: email || "admin@tasin.ng",
+          name: email?.split("@")[0] || "Administrator",
+          isDemo: true,
+        });
+        toast.success("Demo mode — dashboard unlocked.");
+        navigate(from, { replace: true });
         return;
       }
 
-      const { token, email: userEmail, name, role } = result.data;
-      login(token, { email: userEmail, name, role });
-      toast.success("Access granted. Welcome back.");
-      navigate(from, { replace: true });
-    } catch {
-      // Graceful offline / demo fallback
-      const demoToken = `demo_admin_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-      login(demoToken, {
-        email: email || "admin@tasin.ng",
-        name: email?.split("@")[0] || "Administrator",
-        isDemo: true,
+      // 2) Error responses may be HTML (e.g. a Laravel error page), which
+      //    would throw on .json(). Treat that as a failed login, not offline.
+      let result = null;
+      try {
+        result = await response.json();
+      } catch {
+        result = null;
+      }
+
+      if (!response.ok || result?.status !== "success") {
+        setError(
+          result?.message ||
+            "Invalid administrator credentials or access revoked.",
+        );
+        return;
+      }
+
+      // 3) Accept the token from any shape the API may return, so a
+      //    reshaped payload can never throw and silently grant demo access.
+      const token = result.token || result.data?.token || result.access_token;
+      const profile = result.data?.user || result.data || result.user || {};
+
+      if (!token) {
+        setError("Sign-in succeeded but no session token was returned.");
+        return;
+      }
+
+      login(token, {
+        email: profile.email || email.trim(),
+        name: profile.name,
+        role: profile.role,
       });
-      toast.success("Demo mode — dashboard unlocked.");
+      toast.success("Access granted. Welcome back.");
       navigate(from, { replace: true });
     } finally {
       setIsLoading(false);

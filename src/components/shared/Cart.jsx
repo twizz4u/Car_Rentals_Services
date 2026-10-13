@@ -1,4 +1,4 @@
-import { useCart } from "../context/CartContext";
+import { useCart } from "../../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import { X, Trash2, Plus, Minus, ArrowRight, Car, Check } from "lucide-react";
 import { resolveAsset, formatVehicleTitle } from "./CarDetails";

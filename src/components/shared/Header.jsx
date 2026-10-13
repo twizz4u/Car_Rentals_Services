@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useAuth } from "../context/AuthContext";
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { Car, Menu, X } from "lucide-react";
 
 // Section anchors on the Home page. Each label mirrors the heading of the

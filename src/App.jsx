@@ -15,7 +15,7 @@ import { CustomerProfile } from "./pages/CustomerProfile";
 import { Toaster } from "@/components/ui/sonner";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
-import { ProtectedRoute } from "./component/ProtectedRoute";
+import { ProtectedRoute } from "./components/shared/ProtectedRoute";
 import "./App.css";
 
 function App() {

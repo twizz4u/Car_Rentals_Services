@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import StatCard from "@/component/statCard";
-import RecentOrdersTable from "@/component/RecentOrders";
-import RecentActivityFeed from "@/component/RecentActivity";
-import Sidebar from "@/component/Sidebar";
-import TopNav from "@/component/TopNav";
+import StatCard from "@/components/dashboard/statCard";
+import RecentOrdersTable from "@/components/dashboard/RecentOrders";
+import RecentActivityFeed from "@/components/dashboard/RecentActivity";
+import Sidebar from "@/components/admin/Sidebar";
+import TopNav from "@/components/admin/TopNav";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -43,8 +44,12 @@ let dashCache = {
 
 export const DashBoard = () => {
   const { user, token } = useAuth();
+  const navigate = useNavigate();
   const hasShownDemoToast = useRef(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // Set when an admin endpoint rejects the session token, so the UI can say
+  // so instead of silently rendering zeros.
+  const [authExpired, setAuthExpired] = useState(false);
 
   const [stats, setStats] = useState(
     dashCache.stats || { total_cars: 0, available_cars_count: 0, rental_orders_count: 0 }
@@ -110,6 +115,17 @@ export const DashBoard = () => {
       try {
         // Run all API calls concurrently
         const results = await Promise.allSettled(promises);
+
+        // A 401 means the stored token is no longer accepted by the API.
+        // Report it instead of leaving the dashboard silently empty.
+        setAuthExpired(
+          results.some(
+            (r) =>
+              r.status === "rejected" &&
+              typeof r.reason?.status === "number" &&
+              r.reason.status === 401,
+          ),
+        );
 
         // 1. Process Stats Update
         if (results[0].status === "fulfilled") {
@@ -210,6 +226,28 @@ export const DashBoard = () => {
           subtitle="Overview of activity and analytics"
           onMenuClick={() => setIsSidebarOpen(true)}
         />
+        {authExpired && (
+          <div
+            role="alert"
+            className="mx-2 md:mx-0 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          >
+            <span className="font-semibold">Session expired.</span>
+            <span className="text-amber-800">
+              Your admin session is no longer accepted by the API, so live data
+              can't be loaded.
+            </span>
+            <Button
+              size="sm"
+              onClick={() => {
+                setAuthExpired(false);
+                navigate("/admin-login");
+              }}
+              className="ml-auto bg-amber-600 text-white hover:bg-amber-700"
+            >
+              Sign in again
+            </Button>
+          </div>
+        )}
         <section className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2 md:px-0">
             {loadingStats ? (

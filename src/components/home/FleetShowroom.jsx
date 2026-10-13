@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { CarDetail } from "./CarDetails";
-import { data as localCarsData } from "../assets/data";
+import { CarDetail } from "../shared/CarDetails";
+import { data as localCarsData } from "../../assets/data";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 // The fleet showroom section: fetches the catalogue, then handles category

@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Header } from "../component/Header";
-import { Hero } from "../component/Hero";
-import { FleetShowroom } from "../component/FleetShowroom";
-import { Highligth } from "../component/Highligth";
-import { BudgetFriendly } from "../component/BudgetFrienldly";
-import { ServiceStandards } from "../component/ServiceStandards";
-import { ServiceLocations } from "../component/ServiceLocations";
-import { AboutSection } from "../component/AboutSection";
-import { Testimonials } from "../component/Testimonials";
-import { Footer } from "../component/Footer";
-import { Cart } from "../component/Cart";
+import { Header } from "../components/shared/Header";
+import { Hero } from "../components/home/Hero";
+import { FleetShowroom } from "../components/home/FleetShowroom";
+import { Highligth } from "../components/home/Highligth";
+import { BudgetFriendly } from "../components/home/BudgetFrienldly";
+import { ServiceStandards } from "../components/home/ServiceStandards";
+import { ServiceLocations } from "../components/home/ServiceLocations";
+import { AboutSection } from "../components/home/AboutSection";
+import { Testimonials } from "../components/home/Testimonials";
+import { Footer } from "../components/shared/Footer";
+import { Cart } from "../components/shared/Cart";
 import { PaymentPage } from "./Payment";
 
 export const Home = () => {

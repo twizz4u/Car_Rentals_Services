@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import Sidebar from "@/component/Sidebar";
-import TopNav from "@/component/TopNav";
-import CustomersTable from "@/component/CustomersTable";
+import Sidebar from "@/components/admin/Sidebar";
+import TopNav from "@/components/admin/TopNav";
+import CustomersTable from "@/components/customers/CustomersTable";
 import { Users, UserPlus, CalendarDays } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
