@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { statusDot } from "../shared/status";
 import {
   MoreHorizontal,
   ArrowUpDown,
@@ -106,20 +107,11 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
       accessorKey: "status",
       cell: ({ getValue }) => {
         const rawStatus = getValue() || "";
-        const lower = rawStatus.toLowerCase();
         const displayStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
 
-        const mapping =
-          lower === "success" || lower === "completed"
-            ? { bg: "bg-green-100", text: "text-green-800" }
-            : lower === "pending"
-              ? { bg: "bg-yellow-100", text: "text-yellow-800" }
-              : { bg: "bg-red-100", text: "text-red-800" };
-
         return (
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${mapping.bg} ${mapping.text}`}
-          >
+          <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-700">
+            <span className={`h-1.5 w-1.5 rounded-[1px] ${statusDot(rawStatus)}`} />
             {displayStatus}
           </span>
         );
@@ -187,24 +179,24 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
   };
 
   return (
-    <div className="bg-white p-4 rounded-xl border shadow-sm space-y-4">
+    <div className="bg-white p-4 rounded-[2px] border border-stone-200 space-y-4">
       <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">
+          <h2 className="font-['Playfair_Display',serif] text-xl font-normal text-stone-900">
             Transaction History
           </h2>
-          <p className="text-sm text-slate-400">Recent incoming payments</p>
+          <p className="text-sm text-stone-500">Recent incoming payments</p>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="flex flex-col lg:flex-row gap-3 p-3 bg-slate-50/50 rounded-lg border border-slate-100">
+      <div className="flex flex-col lg:flex-row gap-3 p-3 bg-stone-50 rounded-[2px] border border-stone-200">
         <div className="flex-1">
           <Input
             placeholder="Search customers..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm bg-white"
+            className="max-w-sm bg-white border-stone-200 rounded-[2px] focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
           />
         </div>
 
@@ -212,10 +204,10 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
           {/* Status Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="bg-white gap-2">
-                <Filter className="w-4 h-4 text-slate-500" />
+              <Button variant="outline" className="bg-white gap-2 rounded-[2px] border-stone-200">
+                <Filter className="w-4 h-4 text-stone-500" />
                 Status:{" "}
-                <span className="font-semibold text-slate-700">
+                <span className="font-medium text-stone-900">
                   {getStatusFilter()}
                 </span>
                 <ChevronDown className="w-3 h-3 opacity-50" />
@@ -249,19 +241,19 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
           </DropdownMenu>
 
           {/* Date Range Inputs */}
-          <div className="flex items-center gap-2 bg-white px-2 rounded-md border text-sm">
-            <Calendar className="w-4 h-4 text-slate-400" />
+          <div className="flex items-center gap-2 bg-white px-2 rounded-[2px] border border-stone-200 text-sm">
+            <Calendar className="w-4 h-4 text-stone-400" />
             <input
               type="date"
-              className="outline-none py-2 bg-transparent w-[110px] text-slate-600 placeholder:text-slate-400"
+              className="outline-none py-2 bg-transparent w-[110px] text-stone-600 placeholder:text-stone-400"
               placeholder="Start Date"
               value={dateRange.start}
               onChange={(e) => handleDateChange("start", e.target.value)}
             />
-            <span className="text-slate-300">—</span>
+            <span className="text-stone-300">—</span>
             <input
               type="date"
-              className="outline-none py-2 bg-transparent w-[110px] text-slate-600"
+              className="outline-none py-2 bg-transparent w-[110px] text-stone-600"
               placeholder="End Date"
               value={dateRange.end}
               onChange={(e) => handleDateChange("end", e.target.value)}
@@ -271,15 +263,15 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-[1000px] w-full table-auto divide-y">
-          <thead className="bg-slate-50">
+        <table className="min-w-[1000px] w-full table-auto">
+          <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <tr key={headerGroup.id} className="border-b border-stone-200">
                 {headerGroup.headers.map((header) => {
                   return (
                     <th
                       key={header.id}
-                      className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider"
+                      className="px-4 py-3 text-left text-[11px] font-medium text-stone-500 uppercase tracking-[0.16em]"
                     >
                       {header.isPlaceholder
                         ? null
@@ -293,29 +285,28 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y">
+          <tbody>
             {isLoading ? (
               // Skeleton rows
               Array.from({ length: 5 }).map((_, idx) => (
-                <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
+                <tr key={idx} className="border-b border-stone-100">
                   {columns.map((_, colIdx) => (
                     <td key={colIdx} className="px-4 py-3">
-                      <div className="h-4 bg-slate-200 rounded-md animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
+                      <div className="h-4 bg-stone-200 rounded-[2px] animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
                     </td>
                   ))}
                 </tr>
               ))
             ) : table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row, idx) => (
+              table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className={`hover:bg-slate-50 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50"
-                    }`}
+                  className="border-b border-stone-100 last:border-0 hover:bg-stone-50"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3 text-sm text-slate-700"
+                      className="px-4 py-3 text-sm text-stone-700"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -329,7 +320,7 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="h-24 text-center text-slate-500"
+                  className="h-24 text-center text-stone-500"
                 >
                   No results.
                 </td>
@@ -340,8 +331,8 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
       </div>
 
       <div className="flex items-center justify-between py-4">
-        <div className="text-sm text-slate-500">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
+        <div className="text-sm text-stone-500">
+          Page <span className="font-mono tabular-nums text-stone-900">{table.getState().pagination.pageIndex + 1}</span> of{" "}
           {table.getPageCount()}
         </div>
         <div className="flex space-x-2">
@@ -350,6 +341,7 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="rounded-[2px] border-stone-200 hover:bg-stone-50 hover:text-stone-900"
           >
             Previous
           </Button>
@@ -358,6 +350,7 @@ export default function PaymentsTable({ data = [], isLoading = false }) {
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="rounded-[2px] border-stone-200 hover:bg-stone-50 hover:text-stone-900"
           >
             Next
           </Button>

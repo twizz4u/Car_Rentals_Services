@@ -55,8 +55,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const isActive = (path) => {
     return location.pathname === path
-      ? "bg-indigo-50 text-indigo-600"
-      : "text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 active:bg-indigo-100";
+      ? "bg-amber-50 text-amber-700"
+      : "text-slate-700 hover:bg-amber-50 hover:text-amber-700 active:bg-amber-100";
   };
 
   // Real signed-in admin. Demo logins carry no role, so fall back rather than
@@ -90,7 +90,7 @@ export default function Sidebar({ isOpen, onClose }) {
       `}>
         <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 lg:border-none">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-semibold">
+            <div className="w-10 h-10 bg-amber-500 text-black rounded-[2px] flex items-center justify-center font-semibold">
               TR
             </div>
             <div>
@@ -126,7 +126,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <Link to="/dashboard" onClick={onClose}>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-md px-3 py-2 font-medium ${isActive(
+                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-[2px] px-3 py-2 font-medium ${isActive(
                     "/dashboard",
                   )}`}
                 >
@@ -138,7 +138,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <Link to="/manage-cars" onClick={onClose}>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-md px-3 py-2 font-medium ${isActive(
+                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-[2px] px-3 py-2 font-medium ${isActive(
                     "/manage-cars",
                   )}`}
                 >
@@ -151,7 +151,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <Link to="/orders" onClick={onClose}>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-md px-3 py-2 font-medium ${isActive(
+                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-[2px] px-3 py-2 font-medium ${isActive(
                     "/orders",
                   )}`}
                 >
@@ -163,7 +163,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <Link to="/customers" onClick={onClose}>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-md px-3 py-2 font-medium ${isActive(
+                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-[2px] px-3 py-2 font-medium ${isActive(
                     "/customers",
                   )}`}
                 >
@@ -175,7 +175,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <Link to="/payments" onClick={onClose}>
                 <Button
                   variant="ghost"
-                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-md px-3 py-2 font-medium ${isActive(
+                  className={`w-full justify-start gap-3 transition-colors duration-150 rounded-[2px] px-3 py-2 font-medium ${isActive(
                     "/payments",
                   )}`}
                 >

@@ -15,11 +15,9 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { statusDot } from "@/components/shared/status";
 import { useState, useEffect, useCallback } from "react";
 import { carsDashData } from "../assets/data";
 import Sidebar from "@/components/admin/Sidebar";
@@ -310,14 +309,14 @@ export const ManageCar = () => {
           checked={table.getIsAllPageRowsSelected()}
           indeterminate={table.getIsSomePageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+          className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+          className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
         />
       ),
     },
@@ -331,17 +330,17 @@ export const ManageCar = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="px-0 flex items-center gap-2 hover:bg-gray-100"
+                className="px-0 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-stone-500 hover:bg-transparent hover:text-stone-900"
               >
                 Car
                 {isSorted ? (
                   sorting?.desc ? (
-                    <ArrowDown className="w-4 h-4 text-indigo-600" />
+                    <ArrowDown className="w-4 h-4 text-amber-700" />
                   ) : (
-                    <ArrowUp className="w-4 h-4 text-indigo-600" />
+                    <ArrowUp className="w-4 h-4 text-amber-700" />
                   )
                 ) : (
-                  <ArrowUpDown className="w-4 h-4 text-gray-400" />
+                  <ArrowUpDown className="w-4 h-4 text-stone-400" />
                 )}
               </Button>
             </DropdownMenuTrigger>
@@ -403,10 +402,10 @@ export const ManageCar = () => {
           <img
             src={src}
             alt={row.original.name}
-            className="w-16 h-10 object-cover rounded-md border"
+            className="w-16 h-10 object-cover rounded-[2px] border border-stone-200"
           />
         ) : (
-          <div className="w-16 h-10 bg-gray-100 rounded-md flex items-center justify-center text-[10px] text-gray-400 border">
+          <div className="w-16 h-10 bg-stone-100 rounded-[2px] flex items-center justify-center text-[10px] text-stone-400 border border-stone-200">
             N/A
           </div>
         );
@@ -419,24 +418,26 @@ export const ManageCar = () => {
         <div className="flex items-center -ml-4">
           <Button
             variant="ghost"
-            className="px-0 flex items-center justify-start gap-2 hover:bg-gray-100 font-medium whitespace-nowrap"
+            className="px-0 flex items-center justify-start gap-2 hover:bg-transparent text-[11px] font-medium uppercase tracking-[0.16em] text-stone-500 hover:text-stone-900 whitespace-nowrap"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Price / Day
             {column.getIsSorted() === "asc" && (
-              <ArrowUp className="w-4 h-4 text-indigo-600" />
+              <ArrowUp className="w-4 h-4 text-amber-700" />
             )}
             {column.getIsSorted() === "desc" && (
-              <ArrowDown className="w-4 h-4 text-indigo-600" />
+              <ArrowDown className="w-4 h-4 text-amber-700" />
             )}
             {!column.getIsSorted() && (
-              <ArrowUpDown className="w-4 h-4 text-gray-400" />
+              <ArrowUpDown className="w-4 h-4 text-stone-400" />
             )}
           </Button>
         </div>
       ),
       accessorKey: "pricePerDay",
-      cell: ({ getValue }) => `₦${getValue()}`,
+      cell: ({ getValue }) => (
+        <span className="font-mono tabular-nums text-stone-900">₦{Number(getValue()).toLocaleString()}</span>
+      ),
     },
 
     {
@@ -448,9 +449,12 @@ export const ManageCar = () => {
       header: "Publish",
       accessorKey: "published",
       cell: ({ row }) => (
-        <Badge variant={row.original.published ? "default" : "secondary"}>
+        <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-700">
+          <span
+            className={`h-1.5 w-1.5 rounded-[1px] ${statusDot(row.original.published ? "published" : "draft")}`}
+          />
           {row.original.published ? "Published" : "Draft"}
-        </Badge>
+        </span>
       ),
     },
     {
@@ -496,7 +500,7 @@ export const ManageCar = () => {
   });
 
   return (
-    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-gray-50">
+    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 p-3 md:p-6 lg:p-8 space-y-6 overflow-hidden">
         <TopNav
@@ -511,15 +515,19 @@ export const ManageCar = () => {
                 setEditingCar(null);
                 setModalOpen(true);
               }}
-              className="w-full block ml-auto sm:w-auto shadow-sm hover:shadow-md transition-shadow"
+              className="w-full block ml-auto sm:w-auto rounded-[2px] bg-amber-500 text-black hover:bg-amber-400"
             >
               Add New vehicle
             </Button>
           </div>
 
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            <div className="rounded-[2px] border border-stone-200 bg-white p-5 space-y-3 animate-pulse" aria-label="Loading vehicles">
+              <div className="h-9 w-full max-w-sm rounded-[2px] bg-stone-100" />
+              <div className="h-10 rounded-[2px] bg-stone-100" />
+              {Array.from({ length: 5 }).map((_, idx) => (
+                <div key={idx} className="h-14 rounded-[2px] bg-stone-100" />
+              ))}
             </div>
           ) : (
             <>
@@ -529,7 +537,7 @@ export const ManageCar = () => {
                     placeholder="Search vehicles..."
                     value={globalFilter ?? ""}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="w-full bg-white shadow-sm"
+                    className="w-full bg-white border-stone-200 rounded-[2px] focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
                   />
                 </div>
                 <BulkActions
@@ -540,16 +548,16 @@ export const ManageCar = () => {
               </div>
 
               {/* Table */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mx-2 md:mx-0">
+              <div className="bg-white rounded-[2px] border border-stone-200 overflow-hidden mx-2 md:mx-0">
                 <div className="overflow-x-auto">
                   <table className="min-w-[1000px] w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-100">
+                    <thead className="border-b border-stone-200">
                       {table.getHeaderGroups().map((headerGroup) => (
                         <tr key={headerGroup.id}>
                           {headerGroup.headers.map((header) => (
                             <th
                               key={header.id}
-                              className="px-4 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider"
+                              className="px-4 py-4 text-[11px] font-medium text-stone-500 uppercase tracking-[0.16em]"
                             >
                               {flexRender(
                                 header.column.columnDef.header,
@@ -560,16 +568,16 @@ export const ManageCar = () => {
                         </tr>
                       ))}
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody>
                       {table.getRowModel().rows.map((row) => (
                         <tr
                           key={row.id}
-                          className="hover:bg-slate-50/50 transition-colors"
+                          className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition-colors"
                         >
                           {row.getVisibleCells().map((cell) => (
                             <td
                               key={cell.id}
-                              className="px-4 py-4 text-sm text-slate-600"
+                              className="px-4 py-4 text-sm text-stone-600"
                             >
                               {flexRender(
                                 cell.column.columnDef.cell,
@@ -584,8 +592,8 @@ export const ManageCar = () => {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
-                  <span className="text-xs font-medium text-slate-500">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-stone-200">
+                  <span className="text-xs font-mono tabular-nums uppercase tracking-[0.12em] text-stone-500">
                     Showing Page {table.getState().pagination.pageIndex + 1} of{" "}
                     {table.getPageCount()}
                   </span>
@@ -596,7 +604,7 @@ export const ManageCar = () => {
                       variant="outline"
                       onClick={() => table.previousPage()}
                       disabled={!table.getCanPreviousPage()}
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-none rounded-[2px] border-stone-200 hover:bg-stone-50 hover:text-stone-900"
                     >
                       Previous
                     </Button>
@@ -606,7 +614,7 @@ export const ManageCar = () => {
                       variant="outline"
                       onClick={() => table.nextPage()}
                       disabled={!table.getCanNextPage()}
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-none rounded-[2px] border-stone-200 hover:bg-stone-50 hover:text-stone-900"
                     >
                       Next
                     </Button>
@@ -632,18 +640,9 @@ export const ManageCar = () => {
 };
 
 function StatusBadge({ status }) {
-  const map = {
-    available: "bg-green-100 text-green-700",
-    rented: "bg-blue-100 text-blue-700",
-    "All rented": "bg-blue-100 text-blue-700",
-    maintenance: "bg-yellow-100 text-yellow-700",
-    draft: "bg-slate-100 text-slate-600",
-  };
-
   return (
-    <span
-      className={`px-2 py-1 rounded-md text-xs capitalize ${map[status] || "bg-slate-100 text-slate-600"}`}
-    >
+    <span className="inline-flex items-center gap-2 text-xs font-medium capitalize text-stone-700">
+      <span className={`h-1.5 w-1.5 rounded-[1px] ${statusDot(status)}`} />
       {status || "unknown"}
     </span>
   );
@@ -684,24 +683,25 @@ function BulkActions({ selected, onDelete, onPublish }) {
   if (!Object.keys(selected).length) return null;
 
   return (
-    <div className="flex  items-center gap-3 bg-muted p-3 rounded-md">
-      <span className="text-sm font-medium">
+    <div className="flex items-center gap-3 bg-white border border-stone-200 p-3 rounded-[2px]">
+      <span className="font-mono text-xs tabular-nums uppercase tracking-[0.12em] text-stone-500">
         {Object.keys(selected).length} Selected
       </span>
 
-      <Button size="sm" onClick={() => onPublish(true)}>
+      <Button size="sm" onClick={() => onPublish(true)} className="rounded-[2px] bg-amber-500 text-black hover:bg-amber-400">
         Publish
       </Button>
 
       <Button
         size="sm"
-        className={"bg-cyan-400 hover:bg-cyan-500"}
+        variant="outline"
+        className="rounded-[2px] border-stone-200 hover:bg-stone-50 hover:text-stone-900"
         onClick={() => onPublish(false)}
       >
         Draft
       </Button>
 
-      <Button size="sm" variant="destructive" onClick={onDelete}>
+      <Button size="sm" variant="destructive" onClick={onDelete} className="rounded-[2px]">
         Delete
       </Button>
     </div>

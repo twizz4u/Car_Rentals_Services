@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/admin/Sidebar";
 import TopNav from "@/components/admin/TopNav";
 import OrdersTable from "@/components/orders/OrdersTable";
-import { ClipboardList, CheckCircle, Clock, Loader2 } from "lucide-react";
+import CountUp from "react-countup";
+import { ClipboardList, CheckCircle, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 
@@ -71,7 +72,7 @@ export const Orders = () => {
   }, [fetchOrders, fetchStats]);
 
   return (
-    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-gray-50">
+    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 p-3 md:p-6 lg:p-8 space-y-6 overflow-hidden">
         <TopNav
@@ -83,63 +84,75 @@ export const Orders = () => {
         <div className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-0">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:scale-[1.02] transition-all group">
-              <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <ClipboardList className="w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                  Total Orders
-                </p>
-                {statsLoading ? (
-                  <Loader2 className="w-8 h-8 mt-1 animate-spin text-blue-600" />
-                ) : (
-                  <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">
-                    {stats.total}
-                  </h3>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:scale-[1.02] transition-all group">
-              <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center group-hover:bg-green-600 group-hover:text-white transition-colors">
-                <CheckCircle className="w-7 h-7" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                  Completed
-                </p>
-                {statsLoading ? (
-                  <Loader2 className="w-8 h-8 mt-1 animate-spin text-green-600" />
-                ) : (
-                  <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">
-                    {stats.completed}
-                  </h3>
-                )}
+            <div className="p-4 rounded-[2px] bg-white border border-stone-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">
+                    Total Orders
+                  </p>
+                  <div className="mt-1">
+                    {statsLoading ? (
+                      <span className="block h-8 w-20 rounded-[2px] bg-stone-200 animate-pulse" />
+                    ) : (
+                      <span className="font-['Playfair_Display',serif] text-[1.75rem] font-normal text-stone-900 tabular-nums">
+                        <CountUp end={stats.total} duration={1.2} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 rounded-[2px] bg-amber-50">
+                  <ClipboardList className="w-6 h-6 text-amber-700" />
+                </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:scale-[1.02] transition-all group sm:col-span-2 lg:col-span-1">
-              <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
-                <Clock className="w-7 h-7" />
+            <div className="p-4 rounded-[2px] bg-white border border-stone-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">
+                    Completed
+                  </p>
+                  <div className="mt-1">
+                    {statsLoading ? (
+                      <span className="block h-8 w-20 rounded-[2px] bg-stone-200 animate-pulse" />
+                    ) : (
+                      <span className="font-['Playfair_Display',serif] text-[1.75rem] font-normal text-stone-900 tabular-nums">
+                        <CountUp end={stats.completed} duration={1.2} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 rounded-[2px] bg-amber-50">
+                  <CheckCircle className="w-6 h-6 text-amber-700" />
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-                  Active/Pending
-                </p>
-                {statsLoading ? (
-                  <Loader2 className="w-8 h-8 mt-1 animate-spin text-amber-600" />
-                ) : (
-                  <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">
-                    {stats.pending}
-                  </h3>
-                )}
+            </div>
+
+            <div className="p-4 rounded-[2px] bg-white border border-stone-200 sm:col-span-2 lg:col-span-1">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">
+                    Active/Pending
+                  </p>
+                  <div className="mt-1">
+                    {statsLoading ? (
+                      <span className="block h-8 w-20 rounded-[2px] bg-stone-200 animate-pulse" />
+                    ) : (
+                      <span className="font-['Playfair_Display',serif] text-[1.75rem] font-normal text-stone-900 tabular-nums">
+                        <CountUp end={stats.pending} duration={1.2} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 rounded-[2px] bg-amber-50">
+                  <Clock className="w-6 h-6 text-amber-700" />
+                </div>
               </div>
             </div>
           </div>
 
           {/* Main Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mx-2 md:mx-0">
+          <div className="bg-white rounded-[2px] border border-stone-200 overflow-hidden mx-2 md:mx-0">
             <div className="overflow-x-auto">
               <OrdersTable orders={orders} loading={loading} />
             </div>

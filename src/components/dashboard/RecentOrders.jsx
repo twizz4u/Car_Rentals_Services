@@ -1,6 +1,7 @@
 // ✅ CORRECT: useReactTable is the v8 export
 import { useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
 import { Link } from "react-router-dom";
+import { statusDot } from "../shared/status";
 // import { motion } from "framer-motion";
 
 export default function RecentOrdersTable({ data = [] }) {
@@ -17,25 +18,19 @@ export default function RecentOrdersTable({ data = [] }) {
     {
       header: "Amount",
       accessorKey: "amount",
-      cell: ({ getValue }) => `₦${parseFloat(getValue()).toLocaleString()}`,
+      cell: ({ getValue }) => (
+        <span className="font-mono tabular-nums">{`₦${parseFloat(getValue()).toLocaleString()}`}</span>
+      ),
     },
     {
       header: "Status",
       accessorKey: "status",
       cell: ({ getValue }) => {
         const status = getValue();
-        const lower = status?.toLowerCase();
-        const mapping =
-          lower === "completed"
-            ? { bg: "bg-green-100", text: "text-green-800" }
-            : lower === "pending"
-              ? { bg: "bg-yellow-100", text: "text-yellow-800" }
-              : { bg: "bg-red-100", text: "text-red-800" };
 
         return (
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ${mapping.bg} ${mapping.text}`}
-          >
+          <span className="inline-flex items-center gap-2 text-xs font-medium text-stone-700">
+            <span className={`h-1.5 w-1.5 rounded-[1px] ${statusDot(status)}`} />
             {status}
           </span>
         );
@@ -55,17 +50,17 @@ export default function RecentOrdersTable({ data = [] }) {
   // });
 
   return (
-    <div className="bg-white p-4 rounded-xl border shadow-sm">
+    <div className="bg-white p-4 rounded-[2px] border border-stone-200">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-slate-800">
+          <h2 className="font-['Playfair_Display',serif] text-xl font-normal text-stone-900">
             Recent Rental Orders
           </h2>
-          <p className="text-sm text-slate-400">Latest bookings and statuses</p>
+          <p className="text-sm text-stone-500">Latest bookings and statuses</p>
         </div>
         <div>
           <Link to="/orders">
-            <button className="text-sm bg-indigo-50 text-indigo-600 px-3 py-1 rounded-md shadow-sm hover:bg-indigo-100">
+            <button className="text-sm bg-amber-500 text-black px-3 py-1 rounded-[2px] hover:bg-amber-400">
               View all
             </button>
           </Link>
@@ -73,38 +68,52 @@ export default function RecentOrdersTable({ data = [] }) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-[800px] table-auto divide-y">
-          <thead className="bg-slate-50">
-            <tr>
+        <table className="min-w-[800px] table-auto">
+          <thead>
+            <tr className="border-b border-stone-200">
               {table.getHeaderGroups()[0].headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-[11px] font-medium text-stone-500 uppercase tracking-[0.16em]"
                 >
                   {header.column.columnDef.header}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y">
-            {table.getRowModel().rows.map((row, idx) => (
-              <tr
-                key={row.id}
-                className={`hover:bg-slate-50 ${idx % 2 === 0 ? "bg-white" : "bg-slate-50"
-                  }`}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-4 py-3 text-sm text-slate-700"
-                  >
-                    {cell.column.id === "start_date"
-                      ? new Date(cell.getValue()).toLocaleDateString()
-                      : flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+          <tbody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-b border-stone-100 last:border-0 hover:bg-stone-50"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-4 py-3 text-sm text-stone-700"
+                    >
+                      {cell.column.id === "start_date"
+                        ? new Date(cell.getValue()).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className="px-4 py-10 text-center text-sm text-stone-400"
+                >
+                  No orders found.
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "@/components/admin/Sidebar";
 import TopNav from "@/components/admin/TopNav";
 import CustomersTable from "@/components/customers/CustomersTable";
+import CountUp from "react-countup";
 import { Users, UserPlus, CalendarDays } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -50,7 +51,7 @@ export const Customers = () => {
   }, [token]);
 
   return (
-    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-gray-50">
+    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 p-3 md:p-6 lg:p-8 space-y-6 overflow-hidden">
         <TopNav
@@ -65,19 +66,17 @@ export const Customers = () => {
             {isLoading ? (
               // Skeleton loading cards
               <>
-                {[
-                  { bg: "bg-indigo-50", shadow: "rgba(99,102,241,0.2)" },
-                  { bg: "bg-emerald-50", shadow: "rgba(16,185,129,0.2)" },
-                  { bg: "bg-pink-50", shadow: "rgba(236,72,153,0.2)" },
-                ].map((card, i) => (
+                {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className={`bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5`}
+                    className="bg-white p-4 rounded-[2px] border border-stone-200"
                   >
-                    <div className={`w-14 h-14 ${card.bg} rounded-2xl animate-pulse`} />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 w-28 bg-slate-200 rounded-full animate-pulse" />
-                      <div className="h-7 w-16 bg-slate-200 rounded-lg animate-pulse" />
+                    <div className="flex justify-between items-center">
+                      <div className="space-y-2">
+                        <div className="h-3 w-28 bg-stone-200 rounded-full animate-pulse" />
+                        <div className="h-8 w-20 bg-stone-200 rounded-[2px] animate-pulse" />
+                      </div>
+                      <div className="w-12 h-12 bg-stone-200 rounded-[2px] animate-pulse" />
                     </div>
                   </div>
                 ))}
@@ -85,40 +84,45 @@ export const Customers = () => {
             ) : (
               // Loaded stats cards
               <>
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:scale-[1.02] transition-all group">
-                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-                    <Users className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Customers</p>
-                    <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">{stats.total}</h3>
-                    <p className="text-[10px] text-green-500 font-bold flex items-center gap-1 mt-1 bg-green-50 w-fit px-2 py-0.5 rounded-full">
-                      +12% <span className="text-slate-400 font-medium whitespace-nowrap">vs last month</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:scale-[1.02] transition-all group">
-                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                    <CalendarDays className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">New This Month</p>
-                    <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">{stats.newThisMonth}</h3>
-                    <p className="text-[10px] text-emerald-500 font-bold mt-1 bg-emerald-50 w-fit px-2 py-0.5 rounded-full">Active</p>
+                <div className="p-4 rounded-[2px] bg-white border border-stone-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">Total Customers</p>
+                      <div className="mt-1">
+                        <span className="font-['Playfair_Display',serif] text-[1.75rem] font-normal text-stone-900 tabular-nums"><CountUp end={stats.total} duration={1.2} /></span>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-[2px] bg-amber-50">
+                      <Users className="w-6 h-6 text-amber-700" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-5 hover:scale-[1.02] transition-all group lg:col-span-1 sm:col-span-2 lg:sm:col-span-1">
-                  <div className="w-14 h-14 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                    <UserPlus className="w-7 h-7" />
+                <div className="p-4 rounded-[2px] bg-white border border-stone-200">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">New This Month</p>
+                      <div className="mt-1">
+                        <span className="font-['Playfair_Display',serif] text-[1.75rem] font-normal text-stone-900 tabular-nums"><CountUp end={stats.newThisMonth} duration={1.2} /></span>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-[2px] bg-amber-50">
+                      <CalendarDays className="w-6 h-6 text-amber-700" />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">New This Year</p>
-                    <h3 className="text-2xl md:text-3xl font-extrabold text-slate-900 mt-1">{stats.newJoiners}</h3>
-                    <p className="text-[10px] text-rose-500 font-bold flex items-center gap-1 mt-1 bg-rose-50 w-fit px-2 py-0.5 rounded-full">
-                      -2% <span className="text-slate-400 font-medium whitespace-nowrap">vs last month</span>
-                    </p>
+                </div>
+
+                <div className="p-4 rounded-[2px] bg-white border border-stone-200 lg:col-span-1 sm:col-span-2 lg:sm:col-span-1">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-stone-500">New This Year</p>
+                      <div className="mt-1">
+                        <span className="font-['Playfair_Display',serif] text-[1.75rem] font-normal text-stone-900 tabular-nums"><CountUp end={stats.newJoiners} duration={1.2} /></span>
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-[2px] bg-amber-50">
+                      <UserPlus className="w-6 h-6 text-amber-700" />
+                    </div>
                   </div>
                 </div>
               </>
@@ -126,10 +130,13 @@ export const Customers = () => {
           </div>
 
           {/* Main Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden px-2 md:px-0 mx-2 md:mx-0">
+          <div className="bg-white rounded-[2px] border border-stone-200 overflow-hidden px-2 md:px-0 mx-2 md:mx-0">
             {isLoading ? (
-              <div className="flex items-center justify-center h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <div className="p-5 space-y-3 animate-pulse" aria-label="Loading customers">
+                <div className="h-10 rounded-[2px] bg-stone-100" />
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={idx} className="h-14 rounded-[2px] bg-stone-100" />
+                ))}
               </div>
             ) : (
               <div className="overflow-x-auto">

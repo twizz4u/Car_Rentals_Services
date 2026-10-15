@@ -137,9 +137,9 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-md overflow-y-auto max-h-[90vh] rounded-[2px]">
         <DialogHeader>
-          <DialogTitle>{car ? "Edit Car" : "Add Car"}</DialogTitle>
+          <DialogTitle className="font-['Playfair_Display',serif] font-normal text-stone-900">{car ? "Edit Car" : "Add Car"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -158,7 +158,7 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
           />
 
           <textarea
-            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-h-[80px] w-full rounded-[2px] border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:border-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="Description (optional)"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -207,7 +207,7 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
                   : `http://127.0.0.1:8000/storage/${form.preview}`
               }
               alt="preview"
-              className="h-32 w-full object-cover rounded-md border"
+              className="h-32 w-full object-cover rounded-[2px] border border-stone-200"
             />
           )}
 
@@ -228,7 +228,7 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
             </Badge>
           </div>
 
-          <Button onClick={submit} className="w-full" disabled={loading}>
+          <Button onClick={submit} className="w-full rounded-[2px] bg-amber-500 text-black hover:bg-amber-400" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

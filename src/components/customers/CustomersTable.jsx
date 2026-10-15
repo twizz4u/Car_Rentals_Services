@@ -43,7 +43,7 @@ export default function CustomersTable({ data = [] }) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4 text-slate-500 hover:text-indigo-600"
+            className="-ml-4 text-stone-500 hover:text-amber-700"
           >
             Customer
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -51,26 +51,17 @@ export default function CustomersTable({ data = [] }) {
         );
       },
       cell: ({ row }) => {
-        // Generate a deterministic color based on the name length/char code roughly
-        const colors = [
-          "from-pink-500 to-rose-500 shadow-pink-200",
-          "from-indigo-500 to-blue-500 shadow-indigo-200",
-          "from-purple-500 to-violet-500 shadow-purple-200",
-          "from-emerald-500 to-teal-500 shadow-emerald-200",
-          "from-orange-500 to-amber-500 shadow-orange-200",
-        ];
         const name = row.original.customer_name || "Unknown";
-        const colorClass = colors[name.length % colors.length];
 
         return (
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-md`}
+              className="w-10 h-10 rounded-[2px] bg-amber-500 flex items-center justify-center text-black font-bold text-sm"
             >
               {name.charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-stone-900">
                 {name}
               </span>
             </div>
@@ -83,12 +74,12 @@ export default function CustomersTable({ data = [] }) {
       header: "Contact Info",
       cell: ({ row }) => (
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2 text-slate-600 text-xs font-medium">
-            <Mail className="w-3.5 h-3.5 text-indigo-400" />{" "}
+          <div className="flex items-center gap-2 text-stone-600 text-xs font-medium">
+            <Mail className="w-3.5 h-3.5 text-stone-400" />{" "}
             {row.original.email}
           </div>
-          <div className="flex items-center gap-2 text-slate-600 text-xs">
-            <Phone className="w-3.5 h-3.5 text-emerald-400" />{" "}
+          <div className="flex items-center gap-2 text-stone-600 text-xs">
+            <Phone className="w-3.5 h-3.5 text-stone-400" />{" "}
             {row.original.phone}
           </div>
         </div>
@@ -101,7 +92,7 @@ export default function CustomersTable({ data = [] }) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="-ml-4 text-slate-500 hover:text-indigo-600"
+            className="-ml-4 text-stone-500 hover:text-amber-700"
           >
             Total Spent
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -112,11 +103,8 @@ export default function CustomersTable({ data = [] }) {
         return (
           <div className="space-y-2 w-[140px]">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-800">
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                }).format(getValue() || 0)}
+              <span className="font-mono tabular-nums text-stone-900">
+                ₦{Number(getValue() || 0).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
           </div>
@@ -127,8 +115,8 @@ export default function CustomersTable({ data = [] }) {
       accessorKey: "rentals_count",
       header: "Rentals",
       cell: ({ getValue }) => (
-        <div className="flex items-center gap-2 font-medium text-slate-700 bg-indigo-50 px-2.5 py-1 rounded-md w-fit border border-indigo-100">
-          <ShoppingBag className="w-3.5 h-3.5 text-indigo-500" />
+        <div className="flex items-center gap-2 font-medium text-stone-700 bg-stone-100 px-2.5 py-1 rounded-[2px] w-fit border border-stone-200">
+          <ShoppingBag className="w-3.5 h-3.5 text-stone-500" />
           {getValue()}
         </div>
       ),
@@ -141,7 +129,7 @@ export default function CustomersTable({ data = [] }) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-indigo-50 text-slate-500 hover:text-indigo-600"
+                className="h-8 w-8 p-0 rounded-[2px] hover:bg-stone-100 text-stone-500 hover:text-stone-900"
               >
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
@@ -186,31 +174,31 @@ export default function CustomersTable({ data = [] }) {
   });
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+    <div className="bg-white p-5 rounded-[2px] border border-stone-200 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between gap-4 items-center">
         <div className="relative w-full max-w-md group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+            <Search className="h-4 w-4 text-stone-400 group-focus-within:text-amber-700 transition-colors" />
           </div>
           <Input
             placeholder="Search customers..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
-            className="pl-10 bg-slate-50 border-transparent focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-50/50 transition-all rounded-xl"
+            className="pl-10 bg-transparent border-stone-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all rounded-[2px]"
           />
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-100 overflow-x-auto">
-        <table className="min-w-[900px] w-full table-auto divide-y divide-slate-100">
-          <thead className="bg-slate-50/50">
+      <div className="rounded-[2px] border border-stone-200 overflow-x-auto">
+        <table className="min-w-[900px] w-full table-auto">
+          <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <tr key={headerGroup.id} className="border-b border-stone-200">
                 {headerGroup.headers.map((header) => {
                   return (
                     <th
                       key={header.id}
-                      className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                      className="px-6 py-4 text-left text-[11px] font-medium text-stone-500 uppercase tracking-[0.16em]"
                     >
                       {header.isPlaceholder
                         ? null
@@ -224,17 +212,17 @@ export default function CustomersTable({ data = [] }) {
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
+          <tbody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="hover:bg-indigo-50/30 transition-colors group"
+                  className="border-b border-stone-100 last:border-0 hover:bg-stone-50 transition-colors group"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-6 py-4 text-sm text-slate-700"
+                      className="px-6 py-4 text-sm text-stone-700"
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -248,7 +236,7 @@ export default function CustomersTable({ data = [] }) {
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="h-24 text-center text-slate-500"
+                  className="h-24 text-center text-stone-500"
                 >
                   No customers found.
                 </td>
@@ -259,13 +247,13 @@ export default function CustomersTable({ data = [] }) {
       </div>
 
       <div className="flex items-center justify-between pt-2">
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-stone-500">
           Page{" "}
-          <span className="font-semibold text-slate-900">
+          <span className="font-mono tabular-nums text-stone-900">
             {table.getState().pagination.pageIndex + 1}
           </span>{" "}
           of{" "}
-          <span className="font-semibold text-slate-900">
+          <span className="font-mono tabular-nums text-stone-900">
             {table.getPageCount()}
           </span>
         </div>
@@ -275,7 +263,7 @@ export default function CustomersTable({ data = [] }) {
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
-            className="hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-lg"
+            className="hover:bg-stone-50 hover:text-stone-900 hover:border-stone-300 rounded-[2px] border-stone-200"
           >
             Previous
           </Button>
@@ -284,7 +272,7 @@ export default function CustomersTable({ data = [] }) {
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
-            className="hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-lg"
+            className="hover:bg-stone-50 hover:text-stone-900 hover:border-stone-300 rounded-[2px] border-stone-200"
           >
             Next
           </Button>

@@ -17,10 +17,6 @@ import {
   Car,
 } from "lucide-react";
 import {
-  COLORS,
-  COLORSTATS,
-} from "../assets/data";
-import {
   AreaChart,
   Area,
   PieChart,
@@ -32,6 +28,16 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+
+// Single-hue amber ramp for the fleet donut, so the segments read as one
+// family instead of a rainbow. Data and shape handling below are unchanged.
+const AMBER_RAMP = [
+  "#b45309",
+  "#d97706",
+  "#f59e0b",
+  "#fbbf24",
+  "#fcd34d",
+];
 
 // Module-level cache: persists across SPA navigation, resets on browser
 // refresh. Bound to the session token so it can never outlive the admin it
@@ -220,27 +226,26 @@ export const DashBoard = () => {
 
   // Loading Skeleton Component
   const SkeletonCard = () => (
-    <div className="p-4 rounded-xl border bg-white shadow-sm animate-pulse h-[140px]">
-      <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+    <div className="p-4 rounded-[2px] border border-stone-200 bg-white animate-pulse h-[108px]">
+      <div className="h-4 bg-stone-200 rounded w-1/3 mb-4"></div>
       <div className="flex justify-between items-center">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+        <div className="h-8 bg-stone-200 rounded w-1/4"></div>
+        <div className="h-10 w-10 bg-stone-200 rounded-[2px]"></div>
       </div>
-      <div className="mt-4 h-10 bg-gray-100 rounded"></div>
     </div>
   );
 
   const SkeletonChart = () => (
-    <div className="p-4 rounded-lg border bg-white h-[350px] animate-pulse flex flex-col">
-      <div className="h-6 bg-gray-200 rounded w-1/3 mb-6"></div>
-      <div className="flex-1 bg-gray-100 rounded"></div>
+    <div className="p-4 rounded-[2px] border border-stone-200 bg-white h-[350px] animate-pulse flex flex-col">
+      <div className="h-6 bg-stone-200 rounded w-1/3 mb-6"></div>
+      <div className="flex-1 bg-stone-100 rounded"></div>
     </div>
   );
 
 
 
   return (
-    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-gray-50">
+    <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 p-3 md:p-6 lg:p-8 space-y-6 overflow-hidden">
         <TopNav
@@ -251,7 +256,7 @@ export const DashBoard = () => {
         {authExpired && (
           <div
             role="alert"
-            className="mx-2 md:mx-0 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            className="mx-2 md:mx-0 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[2px] border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900"
           >
             <span className="font-semibold">Session expired.</span>
             <span className="text-amber-800">
@@ -264,7 +269,7 @@ export const DashBoard = () => {
                 setAuthExpired(false);
                 navigate("/admin-login");
               }}
-              className="ml-auto bg-amber-600 text-white hover:bg-amber-700"
+              className="ml-auto rounded-[2px] bg-amber-500 text-black hover:bg-amber-400"
             >
               Sign in again
             </Button>
@@ -285,33 +290,21 @@ export const DashBoard = () => {
                   label="Total Cars"
                   value={stats.total_cars}
                   icon={Car}
-                  trend={12}
-                  sparkData={[{ value: 10 }, { value: 14 }, { value: 18 }, { value: 16 }]}
-                  colorConfig={COLORSTATS.blue}
                 />
                 <StatCard
                   label="Rental Orders"
                   value={stats.rental_orders_count}
                   icon={ClipboardList}
-                  trend={-5}
-                  sparkData={[{ value: 8 }, { value: 6 }, { value: 5 }, { value: 4 }]}
-                  colorConfig={COLORSTATS.purple}
                 />
                 <StatCard
                   label="Available Cars"
                   value={stats.available_cars_count}
                   icon={CarFront}
-                  trend={8}
-                  sparkData={[{ value: 12 }, { value: 15 }, { value: 18 }, { value: 20 }]}
-                  colorConfig={COLORSTATS.green}
                 />
                 <StatCard
                   label="Visits"
                   value={visits}
                   icon={Users}
-                  trend={25}
-                  sparkData={[{ value: 200 }, { value: 300 }, { value: 500 }, { value: 800 }]}
-                  colorConfig={COLORSTATS.orange}
                 />
               </>
             )}
@@ -324,37 +317,37 @@ export const DashBoard = () => {
                 <SkeletonChart />
               </div>
             ) : (
-              <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="lg:col-span-2 bg-white p-4 md:p-6 rounded-[2px] border border-stone-200 overflow-hidden">
                 <div className="mb-6">
-                  <h2 className="text-lg font-bold text-slate-800">Rental Revenue Trends</h2>
-                  <p className="text-sm text-slate-500">Daily collections over the current period</p>
+                  <h2 className="font-['Playfair_Display',serif] text-xl font-normal text-stone-900">Rental Revenue Trends</h2>
+                  <p className="text-sm text-stone-500">Daily collections over the current period</p>
                 </div>
                 <div className="h-[250px] md:h-[320px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={dailyRentalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#d97706" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 10 }} dy={10} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e7e5e4" />
+                      <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#a8a29e', fontSize: 10 }} dy={10} />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 10 }}
+                        tick={{ fill: '#a8a29e', fontSize: 10 }}
                         tickFormatter={(value) => `₦${value >= 1000 ? value / 1000 + 'k' : value}`}
                         dx={-10}
                       />
                       <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                        contentStyle={{ borderRadius: '2px', border: '1px solid #e7e5e4', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
                         formatter={(value) => [`₦${value.toLocaleString()}`, "Revenue"]}
                       />
                       <Area
                         type="monotone"
                         dataKey="total_amount"
-                        stroke="#3b82f6"
+                        stroke="#d97706"
                         strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorRevenue)"
@@ -370,10 +363,10 @@ export const DashBoard = () => {
             {loadingPopular ? (
               <SkeletonChart />
             ) : (
-              <div className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+              <div className="bg-white p-4 md:p-6 rounded-[2px] border border-stone-200 flex flex-col">
                 <div className="mb-2">
-                  <h2 className="text-lg font-bold text-slate-800">Fleet Popularity</h2>
-                  <p className="text-sm text-slate-500">Most rented models</p>
+                  <h2 className="font-['Playfair_Display',serif] text-xl font-normal text-stone-900">Fleet Popularity</h2>
+                  <p className="text-sm text-stone-500">Most rented models</p>
                 </div>
                 <div className="flex-1 min-h-[220px] relative">
                   <ResponsiveContainer width="100%" height="100%">
@@ -391,25 +384,25 @@ export const DashBoard = () => {
                         animationDuration={1000}
                       >
                         {topCarsData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell key={`cell-${index}`} fill={AMBER_RAMP[index % AMBER_RAMP.length]} />
                         ))}
                       </Pie>
                       <Tooltip formatter={(value) => [`${value} Rentals`, "Count"]} />
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
-                    <span className="text-[10px] text-slate-400 font-medium">Top</span>
-                    <span className="text-sm font-bold text-slate-700">Models</span>
+                    <span className="text-[10px] text-stone-400 font-medium">Top</span>
+                    <span className="font-['Playfair_Display',serif] text-base font-normal text-stone-800">Models</span>
                   </div>
                 </div>
                 <div className="mt-4 space-y-2 max-h-[120px] overflow-y-auto custom-scrollbar">
                   {topCarsData.map((data, idx) => (
                     <div key={idx} className="flex justify-between items-center text-xs px-2 py-1 transition-colors">
-                      <div className="flex items-center text-slate-600 truncate pr-3">
-                        <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
+                      <div className="flex items-center text-stone-600 truncate pr-3">
+                        <span className="w-2 h-2 rounded-[1px] mr-2" style={{ backgroundColor: AMBER_RAMP[idx % AMBER_RAMP.length] }}></span>
                         <span className="truncate">{data.model}</span>
                       </div>
-                      <span className="font-bold text-slate-800">{data.rent_count}</span>
+                      <span className="font-mono tabular-nums text-stone-900">{data.rent_count}</span>
                     </div>
                   ))}
                 </div>
@@ -420,15 +413,15 @@ export const DashBoard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-2 md:px-0">
             <div className="lg:col-span-2">
               {loadingOrders ? (
-                <div className="p-4 rounded-2xl border bg-white shadow-sm animate-pulse h-[400px]">
-                  <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+                <div className="p-4 rounded-[2px] border border-stone-200 bg-white animate-pulse h-[400px]">
+                  <div className="h-6 bg-stone-200 rounded w-1/4 mb-4"></div>
                 </div>
               ) : (
                 <RecentOrdersTable data={recentOrders} />
               )}
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-              <RecentActivityFeed />
+            <div className="bg-white p-4 rounded-[2px] border border-stone-200">
+            <RecentActivityFeed orders={recentOrders} />
             </div>
           </div>
         </section>
