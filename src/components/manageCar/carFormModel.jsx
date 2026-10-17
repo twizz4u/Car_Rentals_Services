@@ -8,12 +8,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { API_BASE, useSaveCarMutation } from "../../store/adminApi";
 
 export default function CarFormModal({ open, onClose, onSave, car }) {
-  const { token } = useAuth();
+  const [saveCarRequest] = useSaveCarMutation();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -85,51 +85,41 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
         formData.append("car_image", form.car_image);
       }
 
-      let url = "http://127.0.0.1:8000/api/cars";
-      let reqMethod = "POST";
-
       if (car) {
-        url = `http://127.0.0.1:8000/api/cars/${car.id}`;
         // Since we are sending FormData (multipart/form-data) via PHP/Laravel,
         // we send a POST request but specify the _method field as PATCH.
         formData.append("_method", "PATCH");
       }
 
-      const response = await fetch(url, {
-        method: reqMethod,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          // Note: Content-Type is NOT set for FormData; the browser sets it automatically.
-        },
-        body: formData,
-      });
+      // The mutation posts to /api/cars (create) or /api/cars/:id (update) and
+      // invalidates the Cars cache on success, so the inventory refreshes
+      // itself without an explicit refetch.
+      const data = await saveCarRequest({ id: car?.id, formData }).unwrap();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(car ? "Car updated successfully" : "Car added successfully");
-        onSave(data.data || form);
-        onClose();
+      toast.success(car ? "Car updated successfully" : "Car added successfully");
+      onSave(data?.data || form);
+      onClose();
+    } catch (error) {
+      if (error?.status === "FETCH_ERROR") {
+        console.error("Submission error:", error);
+        toast.error("Network error. Please try again.");
       } else {
         // Backend shapes: { message: ... } for most errors, and
         // { status: 'failed', messages: ..., response: { field: [error] } } for
         // car validation failures.
-        const fieldErrors = Object.values(data.response || data.errors || {}).flat();
+        const body = error?.data;
+        const fieldErrors = Object.values(body?.response || body?.errors || {}).flat();
 
         if (fieldErrors.length) {
           fieldErrors.forEach((err) => toast.error(err));
         } else {
           toast.error(
-            data.message ||
-              data.messages ||
+            body?.message ||
+              body?.messages ||
               (car ? "Failed to update car" : "Failed to add car"),
           );
         }
       }
-    } catch (error) {
-      console.error("Submission error:", error);
-      toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -204,7 +194,7 @@ export default function CarFormModal({ open, onClose, onSave, car }) {
               src={
                 form.preview.startsWith("blob:") || form.preview.startsWith("cars/") || form.preview.startsWith("http")
                   ? form.preview
-                  : `http://127.0.0.1:8000/storage/${form.preview}`
+                  : `${API_BASE}/storage/${form.preview}`
               }
               alt="preview"
               className="h-32 w-full object-cover rounded-[2px] border border-stone-200"

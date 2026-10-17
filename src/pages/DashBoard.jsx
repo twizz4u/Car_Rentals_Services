@@ -28,6 +28,13 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import {
+  useGetCarStatsQuery,
+  useGetRentPerDayQuery,
+  useGetPopularCarsQuery,
+  useGetRecentOrdersQuery,
+  useGetPageVisitsQuery,
+} from "../store/adminApi";
 
 // Single-hue amber ramp for the fleet donut, so the segments read as one
 // family instead of a rainbow. Data and shape handling below are unchanged.
@@ -39,58 +46,46 @@ const AMBER_RAMP = [
   "#fcd34d",
 ];
 
-// Module-level cache: persists across SPA navigation, resets on browser
-// refresh. Bound to the session token so it can never outlive the admin it
-// belongs to — signing out, or a different admin signing into the same
-// browser, starts from an empty cache instead of inheriting old figures.
-let dashCache = {
-  token: null,
-  stats: null,
-  rentals: null,
-  popular: null,
-  orders: null,
-  visits: null,
-};
-
-const cacheFor = (tok) => {
-  const current = dashCache;
-  if (current.token === tok) return current;
-  dashCache = {
-    token: tok,
-    stats: null,
-    rentals: null,
-    popular: null,
-    orders: null,
-    visits: null,
-  };
-  return dashCache;
-};
-
 export const DashBoard = () => {
   const { user, token } = useAuth();
-  // Rebind the module cache to this session. Runs synchronously, before the
-  // useState initialisers below, so a new admin never seeds state from the
-  // previous admin's figures.
-  const cache = cacheFor(token);
   const navigate = useNavigate();
   const hasShownDemoToast = useRef(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // Set when an admin endpoint rejects the session token, so the UI can say
-  // so instead of silently rendering zeros.
-  const [authExpired, setAuthExpired] = useState(false);
+  // Dismissal flag for the session-expired banner. The banner itself is
+  // derived from the query errors below, so it can never disagree with the
+  // real API state the way a hand-set boolean could.
+  const [authExpiredDismissed, setAuthExpiredDismissed] = useState(false);
 
-  const [stats, setStats] = useState(
-    cache.stats || { total_cars: 0, available_cars_count: 0, rental_orders_count: 0 }
-  );
-  const [dailyRentalData, setDailyRentalData] = useState(cache.rentals || []);
-  const [topCarsData, setTopCarsData] = useState(cache.popular || []);
-  const [recentOrders, setRecentOrders] = useState(cache.orders || []);
-  const [visits, setVisits] = useState(cache.visits || 0);
+  // Every dashboard figure comes from the shared RTK Query cache. `skip`
+  // reproduces the old `if (!token) return`, so nothing fires before login.
+  const statsQuery = useGetCarStatsQuery(undefined, { skip: !token });
+  const rentalsQuery = useGetRentPerDayQuery(undefined, { skip: !token });
+  const popularQuery = useGetPopularCarsQuery(undefined, { skip: !token });
+  const ordersQuery = useGetRecentOrdersQuery(undefined, { skip: !token });
+  const visitsQuery = useGetPageVisitsQuery(undefined, { skip: !token });
 
-  const [loadingStats, setLoadingStats] = useState(!cache.stats);
-  const [loadingRentals, setLoadingRentals] = useState(!cache.rentals);
-  const [loadingPopular, setLoadingPopular] = useState(!cache.popular);
-  const [loadingOrders, setLoadingOrders] = useState(!cache.orders);
+  const stats = statsQuery.data || {
+    total_cars: 0,
+    available_cars_count: 0,
+    rental_orders_count: 0,
+  };
+  const dailyRentalData = rentalsQuery.data || [];
+  const topCarsData = popularQuery.data || [];
+  const recentOrders = ordersQuery.data || [];
+  const visits = visitsQuery.data ?? 0;
+
+  const loadingStats = statsQuery.isLoading;
+  const loadingRentals = rentalsQuery.isLoading;
+  const loadingPopular = popularQuery.isLoading;
+  const loadingOrders = ordersQuery.isLoading;
+
+  // A 401 from any admin endpoint means the stored token is no longer
+  // accepted by the API. Report it instead of rendering silent zeros.
+  const authExpired =
+    !authExpiredDismissed &&
+    [statsQuery, rentalsQuery, popularQuery, ordersQuery, visitsQuery].some(
+      (query) => query.error?.status === 401,
+    );
 
   useEffect(() => {
     if (user?.isDemo && !hasShownDemoToast.current) {
@@ -102,127 +97,25 @@ export const DashBoard = () => {
     }
   }, [user]);
 
+  // Preserve the per-endpoint diagnostics the previous fetcher logged, so a
+  // failing admin endpoint is still visible in the console.
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!token) return;
-
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
-
-      // Create an array of fetch promises for the ones that need it
-      const promises = [
-        // 1. Stats
-        !cache.stats
-          ? fetch("http://127.0.0.1:8000/api/cars/stats", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
-          : Promise.resolve({ cached: true, ...cache.stats }),
-
-        // 2. Rentals
-        !cache.rentals
-          ? fetch("http://127.0.0.1:8000/api/rentPerDay", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
-          : Promise.resolve({ cached: true, data: cache.rentals }),
-
-        // 3. Popular Cars
-        !cache.popular
-          ? fetch("http://127.0.0.1:8000/api/popularCarsByModel", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
-          : Promise.resolve({ cached: true, data: cache.popular }),
-
-        // 4. Orders
-        !cache.orders
-          ? fetch("http://127.0.0.1:8000/api/rentalOrders/recent", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
-          : Promise.resolve({ cached: true, _orders: cache.orders }), // Use _orders wrapper to distinguish cache
-
-        // 5. Visits
-        !cache.visits
-          ? fetch("http://127.0.0.1:8000/api/pageVisit", { headers }).then((res) => (res.ok ? res.json() : Promise.reject(res)))
-          : Promise.resolve({ cached: true, visits: cache.visits })
-      ];
-
-      try {
-        // Run all API calls concurrently
-        const results = await Promise.allSettled(promises);
-
-        // A 401 means the stored token is no longer accepted by the API.
-        // Report it instead of leaving the dashboard silently empty.
-        setAuthExpired(
-          results.some(
-            (r) =>
-              r.status === "rejected" &&
-              typeof r.reason?.status === "number" &&
-              r.reason.status === 401,
-          ),
-        );
-
-        // 1. Process Stats Update
-        if (results[0].status === "fulfilled") {
-          const data = results[0].value;
-          if (data.cached || data.status === "success" || data.total_cars !== undefined) {
-            setStats(data);
-            if (!data.cached) cache.stats = data;
-          }
-        } else console.error("Stats fetch error:", results[0].reason);
-        setLoadingStats(false);
-
-        // 2. Process Rentals Update
-        if (results[1].status === "fulfilled") {
-          const data = results[1].value;
-          if (data.data) {
-            setDailyRentalData(data.data);
-            if (!data.cached) cache.rentals = data.data;
-          }
-        } else console.error("Rentals fetch error:", results[1].reason);
-        setLoadingRentals(false);
-
-        // 3. Process Popular Cars Update
-        if (results[2].status === "fulfilled") {
-          const data = results[2].value;
-          if (data.data) {
-            setTopCarsData(data.data);
-            if (!data.cached) cache.popular = data.data;
-          }
-        } else console.error("Popular cars fetch error:", results[2].reason);
-        setLoadingPopular(false);
-
-        // 4. Process Orders Update
-        if (results[3].status === "fulfilled") {
-          const data = results[3].value;
-          if (data.cached) {
-            setRecentOrders(data._orders);
-          } else {
-            if (Array.isArray(data)) {
-              setRecentOrders(data);
-              cache.orders = data;
-            } else if (data.data && Array.isArray(data.data)) {
-              setRecentOrders(data.data);
-              cache.orders = data.data;
-            } else if (data.recent_orders && Array.isArray(data.recent_orders)) {
-              setRecentOrders(data.recent_orders);
-              cache.orders = data.recent_orders;
-            }
-          }
-        } else console.error("Orders fetch error:", results[3].reason);
-        setLoadingOrders(false);
-
-        // 5. Process Visits Update
-        if (results[4].status === "fulfilled") {
-          const data = results[4].value;
-          const count = data.visits ?? data.count ?? data.total ?? data.data ?? data;
-          if (typeof count === "number") {
-            setVisits(count);
-            if (!data.cached) cache.visits = count;
-          }
-        } else console.error("Visits fetch error:", results[4].reason);
-
-      } catch (error) {
-        // Fallback catch block for entire network pipeline failure
-        console.error("Critical failure during Dashboard initialization:", error);
-      }
-    };
-
-    fetchDashboardData();
-  }, [token]);
+    [
+      ["Stats", statsQuery.error],
+      ["Rentals", rentalsQuery.error],
+      ["Popular cars", popularQuery.error],
+      ["Orders", ordersQuery.error],
+      ["Visits", visitsQuery.error],
+    ].forEach(([label, error]) => {
+      if (error) console.error(`${label} fetch error:`, error);
+    });
+  }, [
+    statsQuery.error,
+    rentalsQuery.error,
+    popularQuery.error,
+    ordersQuery.error,
+    visitsQuery.error,
+  ]);
 
   // Loading Skeleton Component
   const SkeletonCard = () => (
@@ -266,7 +159,7 @@ export const DashBoard = () => {
             <Button
               size="sm"
               onClick={() => {
-                setAuthExpired(false);
+                setAuthExpiredDismissed(true);
                 navigate("/admin-login");
               }}
               className="ml-auto rounded-[2px] bg-amber-500 text-black hover:bg-amber-400"

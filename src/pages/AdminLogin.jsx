@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Lock, Mail, ShieldCheck, Eye, EyeOff, ArrowRight, Car, AlertCircle } from "lucide-react";
 import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../store/adminApi";
 import { toast } from "sonner";
 
 // Local fleet photography (bundled, base-path safe): the same executive
@@ -43,7 +44,7 @@ const AdminLogin = () => {
       //    longer masquerade as a successful demo login.
       let response;
       try {
-        response = await fetch("http://127.0.0.1:8000/api/admin/login", {
+        response = await fetch(`${API_BASE}/api/admin/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

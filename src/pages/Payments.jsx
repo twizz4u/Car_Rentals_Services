@@ -6,6 +6,10 @@ import PaymentsTable from "@/components/payments/PaymentsTable";
 import { Link } from "react-router-dom";
 import { Wallet, TrendingUp, Activity } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import {
+  useGetPaymentStatsQuery,
+  useGetPaymentsQuery,
+} from "../store/adminApi";
 
 const formatCurrency = (value) => {
   const num = parseFloat(value);
@@ -16,81 +20,33 @@ const formatCurrency = (value) => {
 export const ClaimsPayments = () => {
   const { token } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [payments, setPayments] = useState([]);
-  const [stats, setStats] = useState({
+
+  // Two independent queries, exactly like the two fetches they replace. RTK
+  // Query cancels in-flight requests on unmount, so the manual AbortController
+  // is no longer needed.
+  const statsQuery = useGetPaymentStatsQuery(undefined, { skip: !token });
+  const paymentsQuery = useGetPaymentsQuery(undefined, { skip: !token });
+
+  const stats = statsQuery.data || {
     current_month_revenue: 0,
     pending: 0,
     total_revenue: 0,
-  });
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
-  const [isLoadingTable, setIsLoadingTable] = useState(true);
+  };
+  const payments = paymentsQuery.data || [];
+  const isLoadingStats = statsQuery.isLoading;
+  const isLoadingTable = paymentsQuery.isLoading;
 
   useEffect(() => {
-    if (!token) return;
+    if (statsQuery.isError) {
+      console.error("Error fetching payment stats:", statsQuery.error);
+    }
+  }, [statsQuery.isError, statsQuery.error]);
 
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    const fetchStats = async () => {
-      try {
-        setIsLoadingStats(true);
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/payments/stats",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            signal,
-          },
-        );
-        if (!response.ok) throw new Error("Failed to fetch payment stats");
-        const result = await response.json();
-        setStats({
-          current_month_revenue: result.data?.current_month_revenue || 0,
-          pending: result.data?.pending || 0,
-          total_revenue: result.data?.total_revenue || 0,
-        });
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error("Error fetching payment stats:", error);
-        }
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    const fetchPayments = async () => {
-      try {
-        setIsLoadingTable(true);
-        const response = await fetch("http://127.0.0.1:8000/api/payments", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          signal,
-        });
-        if (!response.ok) throw new Error("Failed to fetch payments");
-        const result = await response.json();
-        setPayments(result.data || []);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error("Error fetching payments:", error);
-        }
-      } finally {
-        setIsLoadingTable(false);
-      }
-    };
-
-    fetchStats();
-    fetchPayments();
-
-    return () => {
-      controller.abort();
-    };
-  }, [token]);
+  useEffect(() => {
+    if (paymentsQuery.isError) {
+      console.error("Error fetching payments:", paymentsQuery.error);
+    }
+  }, [paymentsQuery.isError, paymentsQuery.error]);
 
   return (
     <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">

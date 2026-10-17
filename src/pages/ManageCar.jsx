@@ -26,7 +26,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { statusDot } from "@/components/shared/status";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { carsDashData } from "../assets/data";
 import Sidebar from "@/components/admin/Sidebar";
 import TopNav from "@/components/admin/TopNav";
@@ -34,118 +35,68 @@ import CarFormModal from "@/components/manageCar/carFormModel";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
+import {
+  adminApi,
+  API_BASE,
+  useGetAdminCarsQuery,
+  useDeleteCarMutation,
+  useRestoreCarMutation,
+  useTogglePublishMutation,
+} from "../store/adminApi";
 
 export const ManageCar = () => {
   const { token } = useAuth();
+  const dispatch = useDispatch();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [cars, setCars] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCar, setEditingCar] = useState(null);
   const [globalFilter, setGlobalFilter] = useState("");
   const [rowSelection, setRowSelection] = useState({});
   const [sorting, setSorting] = useState([]);
 
-  const fetchCars = useCallback(() => {
-    if (!token) {
-      setCars(carsDashData);
-      setLoading(false);
-      return;
-    }
+  // The inventory comes from the shared cache. When the request is skipped
+  // (no token) or fails, `data` is undefined and the static fleet is used —
+  // the same fallback the old fetcher applied by hand.
+  const carsQuery = useGetAdminCarsQuery(undefined, { skip: !token });
+  const [deleteCarMutation] = useDeleteCarMutation();
+  const [restoreCarMutation] = useRestoreCarMutation();
+  const [togglePublishMutation] = useTogglePublishMutation();
 
-    setLoading(true);
-    fetch("http://127.0.0.1:8000/api/cars/admin", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        if (data.status === "success" && Array.isArray(data.data)) {
-          const mapped = data.data.map((car, index) => ({
-            id: car.id ?? index + 1,
-            name: car.name,
-            model: car.model,
-            pricePerDay: Number(car.loan_price),
-            status: car.status,
-            published: car.publish_key === "published",
-            image: car.car_image_url || car.car_image || car.image || null,
-            created_at_ts: car.created_at_ts || 0,
-            color: car.color || "",
-            duration: car.duration || "",
-            description: car.description || "",
-          }));
-          setCars(mapped);
-        } else {
-          console.warn("API Error or unexpected format, using fallback data");
-          setCars(carsDashData);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch cars, using fallback data:", err);
-        toast.error("Failed to load cars from server, using static data");
-        setCars(carsDashData);
-      })
-      .finally(() => setLoading(false));
-  }, [token]);
+  const cars = carsQuery.data ?? carsDashData;
+  const loading = carsQuery.isLoading;
+
+  // Optimistic edits are written straight into the cached list and can be
+  // undone if the request turns out to fail.
+  const patchCars = (recipe) =>
+    dispatch(adminApi.util.updateQueryData("getAdminCars", undefined, recipe));
 
   useEffect(() => {
-    fetchCars();
-  }, [fetchCars]);
+    if (carsQuery.isError) {
+      console.error("Failed to fetch cars, using fallback data:", carsQuery.error);
+      toast.error("Failed to load cars from server, using static data");
+    }
+  }, [carsQuery.isError, carsQuery.error]);
 
   function saveCar() {
-    // Refetch fresh data from backend to ensure images and all fields are in sync
-    fetchCars();
+    // The save mutation already invalidates the Cars tag; invalidating again
+    // here keeps the previous "refresh after save" contract of the onSave prop.
+    dispatch(adminApi.util.invalidateTags(["Cars"]));
   }
 
   async function deleteCarRequest(id) {
-    const response = await fetch(`http://127.0.0.1:8000/api/cars/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) throw new Error(`Failed to delete car ${id}`);
+    await deleteCarMutation(id).unwrap();
     return true;
   }
 
   async function restoreCarRequest(id) {
-    const response = await fetch(
-      `http://127.0.0.1:8000/api/cars/${id}/restore`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      },
-    );
-
-    if (!response.ok) throw new Error(`Failed to restore car ${id}`);
+    await restoreCarMutation(id).unwrap();
     return true;
   }
 
   // The backend endpoint toggles publish state, so only call it for cars that
   // are not already in the desired state.
   async function togglePublishRequest(id) {
-    const response = await fetch(
-      `http://127.0.0.1:8000/api/cars/${id}/publish`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (!response.ok)
-      throw new Error(`Failed to toggle publish status for ${id}`);
+    await togglePublishMutation(id).unwrap();
     return true;
   }
 
@@ -155,10 +106,16 @@ export const ManageCar = () => {
 
     const removed = cars.filter((car) => ids.includes(String(car.id)));
 
+    // Remove the rows immediately; the patch is reverted if any call fails.
+    const patch = patchCars((draft) => {
+      for (let i = draft.length - 1; i >= 0; i--) {
+        if (ids.includes(String(draft[i].id))) draft.splice(i, 1);
+      }
+    });
+
     try {
       await Promise.all(ids.map((id) => deleteCarRequest(id)));
 
-      setCars((prev) => prev.filter((c) => !ids.includes(String(c.id))));
       setRowSelection({});
 
       const toastId = `bulk-delete-${Date.now()}`;
@@ -179,9 +136,10 @@ export const ManageCar = () => {
         ),
       });
     } catch (error) {
+      patch.undo();
       console.error("Failed to delete selected cars:", error);
       toast.error("Failed to delete the selected cars");
-      fetchCars();
+      dispatch(adminApi.util.invalidateTags(["Cars"]));
     }
   }
 
@@ -190,12 +148,12 @@ export const ManageCar = () => {
       await Promise.all(ids.map((id) => restoreCarRequest(id)));
       setRowSelection({});
       table.setPageIndex(0);
-      fetchCars();
+      // restoreCar invalidates the Cars tag, so the list refreshes itself.
       toast("Cars restored successfully");
     } catch (error) {
       console.error("Failed to restore cars:", error);
       toast.error("Failed to restore the cars");
-      fetchCars();
+      dispatch(adminApi.util.invalidateTags(["Cars"]));
     }
   }
 
@@ -217,28 +175,33 @@ export const ManageCar = () => {
 
     const targetIds = targets.map((car) => String(car.id));
 
+    const patch = patchCars((draft) => {
+      draft.forEach((c) => {
+        if (targetIds.includes(String(c.id))) c.published = value;
+      });
+    });
+
     try {
       await Promise.all(targets.map((car) => togglePublishRequest(car.id)));
 
-      setCars((prev) =>
-        prev.map((c) =>
-          targetIds.includes(String(c.id)) ? { ...c, published: value } : c,
-        ),
-      );
       setRowSelection({});
       toast(value ? "Cars published" : "Cars moved to draft");
     } catch (error) {
+      patch.undo();
       console.error("Failed to update publish state:", error);
       toast.error("Failed to update the selected cars");
-      fetchCars();
+      dispatch(adminApi.util.invalidateTags(["Cars"]));
     }
   }
 
   async function deleteCar(id) {
+    const patch = patchCars((draft) => {
+      const index = draft.findIndex((c) => String(c.id) === String(id));
+      if (index !== -1) draft.splice(index, 1);
+    });
+
     try {
       await deleteCarRequest(id);
-
-      setCars((prev) => prev.filter((c) => String(c.id) !== String(id)));
 
       const toastId = `delete-${id}-${Date.now()}`;
       toast("Car deleted", {
@@ -258,9 +221,10 @@ export const ManageCar = () => {
         ),
       });
     } catch (error) {
+      patch.undo();
       console.error("Failed to delete car:", error);
       toast.error("Failed to delete the car");
-      fetchCars();
+      dispatch(adminApi.util.invalidateTags(["Cars"]));
     }
   }
 
@@ -275,10 +239,11 @@ export const ManageCar = () => {
 
     const previousPublishedState = carToToggle.published;
 
-    // Optimistically update the UI to feel responsive
-    setCars((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, published: !c.published } : c)),
-    );
+    // Optimistically update the cached list to feel responsive
+    const patch = patchCars((draft) => {
+      const target = draft.find((c) => c.id === id);
+      if (target) target.published = !target.published;
+    });
 
     try {
       await togglePublishRequest(id);
@@ -289,15 +254,9 @@ export const ManageCar = () => {
           : "Car published successfully",
       );
     } catch (error) {
+      patch.undo();
       console.error("Error toggling publish status:", error);
       toast.error("Failed to update status. Reverting change.");
-
-      // Revert the optimistic update on failure
-      setCars((prev) =>
-        prev.map((c) =>
-          c.id === id ? { ...c, published: previousPublishedState } : c,
-        ),
-      );
     }
   }
 
@@ -393,7 +352,7 @@ export const ManageCar = () => {
             !src.startsWith("data:") &&
             !src.startsWith("cars/")
           ) {
-            src = `http://127.0.0.1:8000/storage/${src}`;
+            src = `${API_BASE}/storage/${src}`;
           }
         } else {
           src = null;

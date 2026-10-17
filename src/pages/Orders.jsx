@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "@/components/admin/Sidebar";
 import TopNav from "@/components/admin/TopNav";
 import OrdersTable from "@/components/orders/OrdersTable";
@@ -6,70 +6,35 @@ import CountUp from "react-countup";
 import { ClipboardList, CheckCircle, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { useGetOrdersQuery, useGetOrderStatsQuery } from "../store/adminApi";
 
 export const Orders = () => {
   const { token } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0 });
-  const [statsLoading, setStatsLoading] = useState(true);
 
-  const fetchOrders = useCallback(() => {
-    setLoading(true);
-    fetch("http://127.0.0.1:8000/api/rentalOrders", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        if (data.status === "success" && Array.isArray(data.data)) {
-          setOrders(data.data);
-        } else {
-          console.warn("Unexpected API format:", data);
-          setOrders([]);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch orders:", err);
-        toast.error("Failed to load orders from server");
-        setOrders([]);
-      })
-      .finally(() => setLoading(false));
-  }, [token]);
+  // Both lists come from the shared cache; `skip` reproduces the old
+  // "do nothing until there is a token" guard.
+  const ordersQuery = useGetOrdersQuery(undefined, { skip: !token });
+  const statsQuery = useGetOrderStatsQuery(undefined, { skip: !token });
 
-  const fetchStats = useCallback(() => {
-    setStatsLoading(true);
-    fetch("http://127.0.0.1:8000/api/rentalOrders/stats", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((res) => (res.ok ? res.json() : Promise.reject(res)))
-      .then((data) => {
-        if (data.status === "success") {
-          setStats({
-            total: data.total ?? 0,
-            completed: data.completed ?? 0,
-            pending: data.pending ?? 0,
-          });
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch order stats:", err);
-      })
-      .finally(() => setStatsLoading(false));
-  }, [token]);
+  const orders = ordersQuery.data || [];
+  const loading = ordersQuery.isLoading;
+  const stats = statsQuery.data || { total: 0, completed: 0, pending: 0 };
+  const statsLoading = statsQuery.isLoading;
+
+  // The old fetcher showed a toast when the orders request failed; keep it.
+  useEffect(() => {
+    if (ordersQuery.isError) {
+      console.error("Failed to fetch orders:", ordersQuery.error);
+      toast.error("Failed to load orders from server");
+    }
+  }, [ordersQuery.isError, ordersQuery.error]);
 
   useEffect(() => {
-    fetchOrders();
-    fetchStats();
-  }, [fetchOrders, fetchStats]);
+    if (statsQuery.isError) {
+      console.error("Failed to fetch order stats:", statsQuery.error);
+    }
+  }, [statsQuery.isError, statsQuery.error]);
 
   return (
     <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">

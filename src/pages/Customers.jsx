@@ -5,50 +5,28 @@ import CustomersTable from "@/components/customers/CustomersTable";
 import CountUp from "react-countup";
 import { Users, UserPlus, CalendarDays } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useGetCustomerStatsQuery } from "../store/adminApi";
 
 export const Customers = () => {
   const { token } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [data, setData] = useState([]);
-  const [stats, setStats] = useState({
-    total: 0,
-    newThisMonth: 0,
-    newJoiners: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
+
+  // List and counts arrive together in one response, so one query serves both.
+  const customersQuery = useGetCustomerStatsQuery(undefined, { skip: !token });
+
+  const isLoading = customersQuery.isLoading;
+  const data = customersQuery.data?.customers || [];
+  const stats = {
+    total: customersQuery.data?.total || 0,
+    newThisMonth: customersQuery.data?.newThisMonth || 0,
+    newJoiners: customersQuery.data?.newJoiners || 0,
+  };
 
   useEffect(() => {
-    if (!token) return;
-
-    const fetchCustomers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch("http://127.0.0.1:8000/api/customers/stats", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        });
-        if (!response.ok) throw new Error("Failed to fetch customer stats");
-        const result = await response.json();
-        // The API may return customers under "data" or "customers" key
-        const customers = result.data || result.customers || [];
-        setData(customers);
-        setStats({
-          total: result.total_customers || 0,
-          newThisMonth: result.new_customers_this_month || 0,
-          newJoiners: result.new_customers_this_year || 0
-        });
-      } catch (error) {
-        console.error("Error fetching customers:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCustomers();
-  }, [token]);
+    if (customersQuery.isError) {
+      console.error("Error fetching customers:", customersQuery.error);
+    }
+  }, [customersQuery.isError, customersQuery.error]);
 
   return (
     <div className="dashboard-container flex flex-col lg:flex-row min-h-screen bg-stone-50">
